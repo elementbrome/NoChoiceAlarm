@@ -1,8 +1,8 @@
-# NoChoice Alarm — plan de test v1.5.2
+# NoChoice Alarm — plan de test v1.5.3
 
 ## Build / mise à jour
 - GitHub Actions construit `app-release.apk` avec la clé Release permanente.
-- Vérifier `versionName 1.5.2` et `versionCode 10`.
+- Vérifier `versionName 1.5.3` et `versionCode 11`.
 - Installer par-dessus la précédente Release signée et vérifier que les alarmes existantes sont conservées.
 
 ## QR — galerie / impression
@@ -52,3 +52,11 @@
 5. Refaire avec une alarme Math uniquement : saisir la bonne réponse sans déverrouiller ; l’alarme doit s’arrêter et le téléphone doit rester verrouillé.
 6. Refaire avec QR + Math : scanner le QR, résoudre le calcul, puis vérifier que l’alarme s’arrête en restant verrouillé.
 7. Vérifier également sur écran éteint : l’alarme doit allumer l’écran et afficher l’interface de réveil.
+
+
+## Réactivation après modification
+1. Désactiver une alarme depuis la liste.
+2. Ouvrir cette alarme dans l’éditeur.
+3. Modifier un réglage, puis appuyer sur **Enregistrer**.
+4. Vérifier que l’alarme apparaît à nouveau comme active dans la liste.
+5. Désactiver ensuite l’alarme directement depuis la liste et vérifier qu’elle reste désactivée tant qu’elle n’est pas enregistrée à nouveau depuis l’éditeur.

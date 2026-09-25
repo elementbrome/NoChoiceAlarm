@@ -751,7 +751,7 @@ public class EditAlarmActivity extends Activity {
         alarm.volumeRampSeconds=rampValue();
         alarm.vibrationEnabled=vibrationSwitch.isChecked();
         if(!alarm.useGlobalQr && (alarm.customQrToken==null||alarm.customQrToken.isEmpty())) alarm.customQrToken=QrUtils.newToken();
-        if(forceEnabled && isNew) alarm.enabled=true;
+        if(forceEnabled) alarm.enabled=true;
     }
 
     private void testAlarm() {

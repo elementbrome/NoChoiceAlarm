@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 (versionCode 11)
+
+- Lorsqu’une alarme désactivée est ouverte dans l’éditeur puis enregistrée, elle est automatiquement réactivée.
+- Le bouton ON/OFF de la liste conserve son comportement indépendant : désactiver une alarme depuis la liste ne la réactive pas.
+- Version : `1.5.3`, `versionCode 11`.
+
 ## 1.5.2 (versionCode 10)
 
 - L’écran de sonnerie reste utilisable au-dessus de l’écran verrouillé, sans déverrouiller le téléphone.

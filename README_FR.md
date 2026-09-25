@@ -1,8 +1,11 @@
-# NoChoice Alarm 1.5.2
+# NoChoice Alarm 1.5.3
 
 Application Android de réveil avec arrêt par QR code et/ou problème de mathématiques.
 
-## Nouveautés 1.5.2
+## Nouveautés 1.5.3
+
+### Réactivation après édition
+Une alarme désactivée est automatiquement réactivée lorsqu’elle est enregistrée depuis l’écran d’édition. Le bouton ON/OFF de la liste reste indépendant.
 
 ### Impression QR A4
 Dans l’éditeur d’une alarme utilisant QR Code, deux actions sont disponibles :
@@ -30,7 +33,7 @@ Cela s’applique aux écrans, boutons, dialogues, notifications et au scanner Q
 Le projet conserve :
 - `applicationId = com.qralarm.app`
 - signature Release permanente via les secrets GitHub
-- `versionCode = 10`
-- `versionName = 1.5.2`
+- `versionCode = 11`
+- `versionName = 1.5.3`
 
 Une mise à jour installée par-dessus une version Release signée avec la même clé conserve normalement les alarmes et préférences locales.
