@@ -92,6 +92,10 @@
     <string name="test_real_alarm_active">Impossible de lancer un test pendant qu’une vraie alarme sonne.</string>
     <string name="test_prepare_failed">Impossible de préparer le test.</string>
     <string name="ok">OK</string>
+    <string name="select_time">Choisir l’heure</string>
+    <string name="flash">Flash</string>
+    <string name="flash_on">Flash activé</string>
+    <string name="flash_unavailable">Le flash n’est pas disponible sur cette caméra.</string>
     <string name="alarm_saved_for">Alarme enregistrée pour %1$s</string>
     <string name="print_action_done">Impression ouverte ✓</string>
 

@@ -39,6 +39,9 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
     private boolean decoding;
     private long lastDecode;
     private boolean done;
+    private TextView flashButton;
+    private boolean flashOn;
+    private boolean flashSupported;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -95,6 +98,16 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         p.topMargin = Ui.dp(this,48);
         root.addView(overlay,p);
 
+        flashButton = Ui.text(this,getString(R.string.flash),15,Color.WHITE,true);
+        flashButton.setGravity(Gravity.CENTER);
+        flashButton.setPadding(Ui.dp(this,18),0,Ui.dp(this,18),0);
+        flashButton.setBackground(Ui.rounded(0xDD161921,18,this));
+        flashButton.setVisibility(android.view.View.INVISIBLE);
+        flashButton.setOnClickListener(v->toggleFlash());
+        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(-2,Ui.dp(this,46),Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+        fp.bottomMargin=Ui.dp(this,96);
+        root.addView(flashButton,fp);
+
         TextView hint = Ui.text(this,getString(R.string.scanner_auto_validation),14,Color.WHITE,false);
         hint.setGravity(Gravity.CENTER);
         hint.setPadding(Ui.dp(this,20),Ui.dp(this,12),Ui.dp(this,20),Ui.dp(this,12));
@@ -116,12 +129,47 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
             if (p.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
                 p.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             }
+            java.util.List<String> flashModes=p.getSupportedFlashModes();
+            flashSupported=flashModes!=null && flashModes.contains(Camera.Parameters.FLASH_MODE_TORCH);
+            flashOn=false;
+            if (flashSupported) p.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
             camera.setParameters(p);
+            updateFlashUi();
             camera.setDisplayOrientation(90);
             startPreview(surface.getHolder());
         } catch (Exception e) {
             Toast.makeText(this,R.string.camera_open_failed,Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void toggleFlash() {
+        if (camera==null || !flashSupported) return;
+        boolean requested=!flashOn;
+        try {
+            Camera.Parameters p=camera.getParameters();
+            java.util.List<String> modes=p.getSupportedFlashModes();
+            if (modes==null || !modes.contains(Camera.Parameters.FLASH_MODE_TORCH)) {
+                flashSupported=false;
+                flashOn=false;
+                updateFlashUi();
+                return;
+            }
+            p.setFlashMode(requested?Camera.Parameters.FLASH_MODE_TORCH:Camera.Parameters.FLASH_MODE_OFF);
+            camera.setParameters(p);
+            flashOn=requested;
+            updateFlashUi();
+        } catch (Exception e) {
+            flashOn=false;
+            updateFlashUi();
+            Toast.makeText(this,R.string.flash_unavailable,Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateFlashUi() {
+        if (flashButton==null) return;
+        flashButton.setVisibility(flashSupported?android.view.View.VISIBLE:android.view.View.INVISIBLE);
+        flashButton.setText(flashOn?R.string.flash_on:R.string.flash);
+        flashButton.setBackground(flashOn?Ui.gradient(18,this):Ui.rounded(0xDD161921,18,this));
     }
 
     private void startPreview(SurfaceHolder holder) {
@@ -166,10 +214,20 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
 
     private void releaseCamera() {
         if (camera != null) {
+            if (flashOn) {
+                try {
+                    Camera.Parameters p=camera.getParameters();
+                    p.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                    camera.setParameters(p);
+                } catch (Exception ignored) {}
+            }
             try { camera.setPreviewCallback(null); camera.stopPreview(); } catch (Exception ignored) {}
             try { camera.release(); } catch (Exception ignored) {}
             camera=null;
         }
+        flashOn=false;
+        flashSupported=false;
+        updateFlashUi();
     }
 
     @Override protected void onResume() {

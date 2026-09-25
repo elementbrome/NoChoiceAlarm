@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.4 (versionCode 12)
+
+- Ajout d’un bouton **Flash** dans le scanner QR. Il active/désactive la torche de la caméra lorsque l’appareil la prend en charge.
+- Le cadran de sélection de l’heure n’est plus affiché en permanence dans l’éditeur.
+- Toucher les heures ou les minutes ouvre désormais un sélecteur d’heure dans une fenêtre modale centrée avec **Annuler** et **OK**.
+- Le cadran étant isolé dans cette fenêtre, le geste circulaire ne fait plus défiler la page d’édition.
+- Version : `1.5.4`, `versionCode 12`.
+
 ## 1.5.3 (versionCode 11)
 
 - Lorsqu’une alarme désactivée est ouverte dans l’éditeur puis enregistrée, elle est automatiquement réactivée.

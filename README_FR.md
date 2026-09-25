@@ -1,8 +1,14 @@
-# NoChoice Alarm 1.5.3
+# NoChoice Alarm 1.5.4
 
 Application Android de réveil avec arrêt par QR code et/ou problème de mathématiques.
 
-## Nouveautés 1.5.3
+## Nouveautés 1.5.4
+
+### Sélecteur d’heure en fenêtre modale
+L’éditeur n’affiche plus le cadran en permanence. Touchez les heures ou les minutes pour ouvrir un sélecteur centré avec **Annuler** et **OK**. Le cadran est isolé du défilement de la page, ce qui évite que l’écran bouge pendant le réglage de l’heure.
+
+### Flash du scanner QR
+Le scanner QR propose un bouton **Flash** lorsque la caméra possède une torche compatible. Le flash peut être activé ou désactivé pendant le scan, y compris lorsque le scanner est utilisé au-dessus de l’écran verrouillé.
 
 ### Réactivation après édition
 Une alarme désactivée est automatiquement réactivée lorsqu’elle est enregistrée depuis l’écran d’édition. Le bouton ON/OFF de la liste reste indépendant.
@@ -33,7 +39,7 @@ Cela s’applique aux écrans, boutons, dialogues, notifications et au scanner Q
 Le projet conserve :
 - `applicationId = com.qralarm.app`
 - signature Release permanente via les secrets GitHub
-- `versionCode = 11`
-- `versionName = 1.5.3`
+- `versionCode = 12`
+- `versionName = 1.5.4`
 
 Une mise à jour installée par-dessus une version Release signée avec la même clé conserve normalement les alarmes et préférences locales.

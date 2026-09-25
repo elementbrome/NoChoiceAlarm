@@ -1,8 +1,8 @@
-# NoChoice Alarm — plan de test v1.5.3
+# NoChoice Alarm — plan de test v1.5.4
 
 ## Build / mise à jour
 - GitHub Actions construit `app-release.apk` avec la clé Release permanente.
-- Vérifier `versionName 1.5.3` et `versionCode 11`.
+- Vérifier `versionName 1.5.4` et `versionCode 12`.
 - Installer par-dessus la précédente Release signée et vérifier que les alarmes existantes sont conservées.
 
 ## QR — galerie / impression
@@ -60,3 +60,22 @@
 3. Modifier un réglage, puis appuyer sur **Enregistrer**.
 4. Vérifier que l’alarme apparaît à nouveau comme active dans la liste.
 5. Désactiver ensuite l’alarme directement depuis la liste et vérifier qu’elle reste désactivée tant qu’elle n’est pas enregistrée à nouveau depuis l’éditeur.
+
+## Sélecteur d’heure modal
+1. Ouvrir une nouvelle alarme ou modifier une alarme existante.
+2. Vérifier que le cadran n’est plus affiché en permanence dans la page.
+3. Toucher les **heures** : une fenêtre centrée doit s’ouvrir directement sur le cadran des heures.
+4. Faire tourner le curseur : la page d’édition derrière la fenêtre ne doit pas défiler.
+5. Sélectionner une heure puis des minutes, appuyer sur **Annuler** et vérifier que l’heure précédente est conservée.
+6. Recommencer, appuyer sur **OK** et vérifier que la nouvelle heure apparaît dans l’éditeur puis est enregistrée correctement.
+7. Toucher directement les **minutes** dans l’éditeur et vérifier que la fenêtre s’ouvre sur le cadran des minutes.
+
+## Flash du scanner QR
+1. Déclencher une alarme utilisant le QR et ouvrir le scanner.
+2. Sur un téléphone équipé d’une torche, vérifier que le bouton **Flash** apparaît.
+3. Appuyer sur **Flash** et vérifier que la torche s’allume et que le bouton indique l’état activé.
+4. Scanner un QR dans une pièce sombre et vérifier que la validation fonctionne.
+5. Désactiver le flash et vérifier que la torche s’éteint.
+6. Quitter le scanner avec le flash activé et vérifier que la torche est éteinte à la fermeture.
+7. Vérifier le même fonctionnement lorsque le téléphone est verrouillé.
+

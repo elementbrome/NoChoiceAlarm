@@ -42,7 +42,8 @@ public class EditAlarmActivity extends Activity {
     private AlarmModel alarm;
     private boolean isNew;
 
-    private MinimalClockView timePicker;
+    private int selectedHour;
+    private int selectedMinute;
     private TextView hourDisplay;
     private TextView minuteDisplay;
     private EditText label;
@@ -106,6 +107,9 @@ public class EditAlarmActivity extends Activity {
             alarm.wakeModeMask=AlarmModel.MODE_QR;
             alarm.vibrationEnabled=false;
         }
+
+        selectedHour = alarm.hour;
+        selectedMinute = alarm.minute;
 
         soundUri = alarm.soundUri == null ? "" : alarm.soundUri;
         soundName = alarm.soundName == null || alarm.soundName.trim().isEmpty()
@@ -325,44 +329,97 @@ public class EditAlarmActivity extends Activity {
         display.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams displayP = new LinearLayout.LayoutParams(-1,-2);
         displayP.topMargin=Ui.dp(this,14);
-        displayP.bottomMargin=Ui.dp(this,8);
+        displayP.bottomMargin=Ui.dp(this,10);
         root.addView(display,displayP);
 
-        hourDisplay = Ui.displayText(this,two(alarm.hour),38,Ui.TEXT);
+        hourDisplay = Ui.displayText(this,two(selectedHour),38,Ui.TEXT);
         hourDisplay.setGravity(Gravity.CENTER);
-        minuteDisplay = Ui.displayText(this,two(alarm.minute),38,Ui.TEXT);
+        minuteDisplay = Ui.displayText(this,two(selectedMinute),38,Ui.TEXT);
         minuteDisplay.setGravity(Gravity.CENTER);
         TextView colon = Ui.displayText(this,":",38,Ui.MUTED);
         colon.setGravity(Gravity.CENTER);
 
+        hourDisplay.setBackground(Ui.rounded(Ui.SURFACE_2,16,this));
+        minuteDisplay.setBackground(Ui.rounded(Ui.SURFACE_2,16,this));
+        hourDisplay.setOnClickListener(v->showTimePickerDialog(MinimalClockView.MODE_HOUR));
+        minuteDisplay.setOnClickListener(v->showTimePickerDialog(MinimalClockView.MODE_MINUTE));
+
         display.addView(hourDisplay,new LinearLayout.LayoutParams(Ui.dp(this,88),Ui.dp(this,66)));
         display.addView(colon,new LinearLayout.LayoutParams(Ui.dp(this,30),Ui.dp(this,66)));
         display.addView(minuteDisplay,new LinearLayout.LayoutParams(Ui.dp(this,88),Ui.dp(this,66)));
-
-        timePicker = new MinimalClockView(this);
-        timePicker.setTime(alarm.hour,alarm.minute);
-        timePicker.setListener((hour,minute,mode)-> {
-            hourDisplay.setText(two(hour));
-            minuteDisplay.setText(two(minute));
-            updateTimeDisplayStyle(mode);
-        });
-        hourDisplay.setOnClickListener(v->timePicker.setMode(MinimalClockView.MODE_HOUR));
-        minuteDisplay.setOnClickListener(v->timePicker.setMode(MinimalClockView.MODE_MINUTE));
-        timePicker.setMode(MinimalClockView.MODE_HOUR);
-        updateTimeDisplayStyle(MinimalClockView.MODE_HOUR);
-
-        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1,Ui.dp(this,306));
-        cp.topMargin=Ui.dp(this,2);
-        root.addView(timePicker,cp);
     }
 
-    private void updateTimeDisplayStyle(int mode) {
-        if (hourDisplay == null || minuteDisplay == null) return;
-        boolean hourActive = mode == MinimalClockView.MODE_HOUR;
-        hourDisplay.setBackground(hourActive ? Ui.gradient(16,this) : Ui.rounded(Ui.SURFACE_2,16,this));
-        minuteDisplay.setBackground(!hourActive ? Ui.gradient(16,this) : Ui.rounded(Ui.SURFACE_2,16,this));
-        hourDisplay.setTextColor(hourActive ? Color.WHITE : Ui.TEXT);
-        minuteDisplay.setTextColor(!hourActive ? Color.WHITE : Ui.TEXT);
+    private void showTimePickerDialog(int initialMode) {
+        final MinimalClockView picker = new MinimalClockView(this);
+        picker.setTime(selectedHour,selectedMinute);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(Ui.dp(this,20),Ui.dp(this,18),Ui.dp(this,20),Ui.dp(this,6));
+
+        TextView title = Ui.displayText(this,getString(R.string.select_time).toUpperCase(Locale.getDefault()),13,Ui.MUTED);
+        content.addView(title,new LinearLayout.LayoutParams(-1,-2));
+
+        LinearLayout display = new LinearLayout(this);
+        display.setGravity(Gravity.CENTER);
+        display.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams dp = new LinearLayout.LayoutParams(-1,-2);
+        dp.topMargin=Ui.dp(this,14);
+        dp.bottomMargin=Ui.dp(this,12);
+        content.addView(display,dp);
+
+        final TextView dialogHour = Ui.displayText(this,two(selectedHour),34,Ui.TEXT);
+        dialogHour.setGravity(Gravity.CENTER);
+        final TextView dialogMinute = Ui.displayText(this,two(selectedMinute),34,Ui.TEXT);
+        dialogMinute.setGravity(Gravity.CENTER);
+        TextView colon = Ui.displayText(this,":",34,Ui.MUTED);
+        colon.setGravity(Gravity.CENTER);
+
+        display.addView(dialogHour,new LinearLayout.LayoutParams(Ui.dp(this,82),Ui.dp(this,60)));
+        display.addView(colon,new LinearLayout.LayoutParams(Ui.dp(this,28),Ui.dp(this,60)));
+        display.addView(dialogMinute,new LinearLayout.LayoutParams(Ui.dp(this,82),Ui.dp(this,60)));
+
+        picker.setListener((hour,minute,mode)-> {
+            dialogHour.setText(two(hour));
+            dialogMinute.setText(two(minute));
+            updateDialogTimeStyle(dialogHour,dialogMinute,mode);
+        });
+        dialogHour.setOnClickListener(v->picker.setMode(MinimalClockView.MODE_HOUR));
+        dialogMinute.setOnClickListener(v->picker.setMode(MinimalClockView.MODE_MINUTE));
+        picker.setMode(initialMode);
+
+        LinearLayout.LayoutParams pickerParams = new LinearLayout.LayoutParams(-1,Ui.dp(this,302));
+        content.addView(picker,pickerParams);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(content)
+                .setNegativeButton(R.string.cancel,null)
+                .setPositiveButton(R.string.ok,(d,which)-> {
+                    selectedHour=picker.getHour();
+                    selectedMinute=picker.getMinute();
+                    hourDisplay.setText(two(selectedHour));
+                    minuteDisplay.setText(two(selectedMinute));
+                })
+                .create();
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Ui.ACCENT_START);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Ui.ACCENT_START);
+        });
+        dialog.show();
+        if (dialog.getWindow()!=null) {
+            dialog.getWindow().setBackgroundDrawable(Ui.rounded(Ui.SURFACE,24,this));
+            int maxWidth=getResources().getDisplayMetrics().widthPixels-Ui.dp(this,32);
+            dialog.getWindow().setLayout(Math.min(Ui.dp(this,380),maxWidth),ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setDimAmount(0.68f);
+        }
+    }
+
+    private void updateDialogTimeStyle(TextView hour,TextView minute,int mode) {
+        boolean hourActive=mode==MinimalClockView.MODE_HOUR;
+        hour.setBackground(hourActive?Ui.gradient(16,this):Ui.rounded(Ui.SURFACE_2,16,this));
+        minute.setBackground(!hourActive?Ui.gradient(16,this):Ui.rounded(Ui.SURFACE_2,16,this));
+        hour.setTextColor(hourActive?Color.WHITE:Ui.TEXT);
+        minute.setTextColor(!hourActive?Color.WHITE:Ui.TEXT);
     }
 
     private View buildEditLockOverlay() {
@@ -741,8 +798,8 @@ public class EditAlarmActivity extends Activity {
     private int rampValue(){ int p=rampSpinner.getSelectedItemPosition(); return p==1?30:p==2?60:p==3?90:p==4?120:0; }
 
     private void collectForm(boolean forceEnabled) {
-        alarm.hour=timePicker.getHour();
-        alarm.minute=timePicker.getMinute();
+        alarm.hour=selectedHour;
+        alarm.minute=selectedMinute;
         alarm.label=label.getText().toString().trim();
         alarm.soundUri=soundUri==null?"":soundUri;
         alarm.soundName=soundName==null||soundName.trim().isEmpty()?"System alarm":soundName;
