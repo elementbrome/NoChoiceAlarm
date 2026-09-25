@@ -41,8 +41,6 @@ public class EditAlarmActivity extends Activity {
 
     private AlarmModel alarm;
     private boolean isNew;
-    private boolean qrSavedThisSession;
-    private boolean qrSaveRequired;
 
     private MinimalClockView timePicker;
     private TextView hourDisplay;
@@ -109,7 +107,6 @@ public class EditAlarmActivity extends Activity {
             alarm.vibrationEnabled=false;
         }
 
-        qrSaveRequired = isNew && alarm.usesQr();
         soundUri = alarm.soundUri == null ? "" : alarm.soundUri;
         soundName = alarm.soundName == null || alarm.soundName.trim().isEmpty()
                 ? (soundUri.isEmpty() ? "System alarm" : "Custom sound") : alarm.soundName;
@@ -551,7 +548,6 @@ public class EditAlarmActivity extends Activity {
             return;
         }
         alarm.wakeModeMask=next;
-        if (bit == AlarmModel.MODE_QR && !on && !qrSavedThisSession) qrSaveRequired=true;
         refreshModeUi();
     }
 
@@ -559,8 +555,6 @@ public class EditAlarmActivity extends Activity {
         if(alarm.useGlobalQr==global) return;
         alarm.useGlobalQr=global;
         if(!global && (alarm.customQrToken==null || alarm.customQrToken.isEmpty())) alarm.customQrToken=QrUtils.newToken();
-        qrSavedThisSession=false;
-        qrSaveRequired=true;
         qrSaveButton.setText(R.string.save_qr_gallery);
         qrSaveButton.setTextColor(Ui.ACCENT_START);
         qrSaveButton.setBackground(Ui.outlined(Ui.SURFACE_2,Ui.ACCENT_START,16,this));
@@ -715,8 +709,6 @@ public class EditAlarmActivity extends Activity {
             qrBitmap=QrUtils.bitmap(shownQrToken,1000);
             String file=alarm.useGlobalQr?"NoChoiceAlarm-QR-commun.png":"NoChoiceAlarm-QR-"+alarm.id+".png";
             QrUtils.saveToGallery(this,qrBitmap,file);
-            qrSavedThisSession=true;
-            qrSaveRequired=false;
             qrSaveButton.setText(R.string.qr_saved);
             qrSaveButton.setTextColor(Color.WHITE);
             qrSaveButton.setBackground(Ui.gradient(16,this));
@@ -732,8 +724,6 @@ public class EditAlarmActivity extends Activity {
             shownQrToken=QrUtils.tokenFor(this,alarm);
             qrBitmap=QrUtils.bitmap(shownQrToken,1200);
             QrUtils.printOnA4(this,qrBitmap,getString(R.string.qr_print_job));
-            qrSavedThisSession=true;
-            qrSaveRequired=false;
             if (qrPrintButton != null) {
                 qrPrintButton.setText(R.string.print_action_done);
                 qrPrintButton.setTextColor(Color.WHITE);
@@ -793,14 +783,6 @@ public class EditAlarmActivity extends Activity {
     private void saveAlarm() {
         stopVolumePreview();
         collectForm(true);
-        if(alarm.usesQr() && qrSaveRequired) {
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.qr_required_title)
-                    .setMessage(R.string.qr_required_message)
-                    .setPositiveButton(R.string.ok,null)
-                    .show();
-            return;
-        }
         AlarmStore.save(this,alarm);
         AlarmScheduler.schedule(this,alarm);
         AlarmStatusNotifier.update(this);

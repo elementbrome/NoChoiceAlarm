@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.2 (versionCode 10)
+
+- L’écran de sonnerie reste utilisable au-dessus de l’écran verrouillé, sans déverrouiller le téléphone.
+- Le scanner QR peut désormais être ouvert et utilisé directement pendant que le téléphone reste verrouillé.
+- Le défi mathématique reste utilisable sur l’écran de sonnerie verrouillé.
+- Le téléphone n’est jamais déverrouillé par l’application : après validation QR/math, l’alarme s’arrête et Android reste verrouillé.
+- Compatibilité renforcée avec Android 8.0 (API 26) pour l’affichage au-dessus de l’écran verrouillé.
+- Version : `1.5.2`, `versionCode 10`.
+
+## 1.5.1 (versionCode 9)
+
+- Suppression du blocage qui imposait d’enregistrer ou d’imprimer le QR avant de sauvegarder une nouvelle alarme.
+- Ajout d’un bouton de duplication sur chaque alarme de la liste.
+- Une copie est créée désactivée avec un nouvel identifiant.
+- Une alarme utilisant un QR individuel reçoit un nouveau QR individuel lors de la duplication.
+
 ## 1.5.0 (versionCode 8)
 
 - Ajout d’un bouton **Imprimer le QR sur A4** sous l’enregistrement dans la galerie.

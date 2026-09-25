@@ -5,8 +5,10 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Camera;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.WindowManager;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.FrameLayout;
@@ -40,6 +42,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        enableLockScreenScannerUi();
         Ui.enableImmersive(this);
         expectedToken = getIntent().getStringExtra(EXTRA_QR_TOKEN);
         if (expectedToken == null || expectedToken.isEmpty()) {
@@ -59,6 +62,22 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.CAMERA},REQ_CAMERA);
         }
+    }
+
+    private void enableLockScreenScannerUi() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true);
+            setTurnScreenOn(true);
+        } else {
+            getWindow().addFlags(
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                            | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            );
+        }
+        getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                        | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        );
     }
 
     private void buildUi() {

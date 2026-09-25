@@ -3,6 +3,7 @@ package com.qralarm.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Gravity;
@@ -29,9 +30,7 @@ public class RingActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
-        setShowWhenLocked(true);
-        setTurnScreenOn(true);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
+        enableLockScreenAlarmUi();
         Ui.enableImmersive(this);
 
         alarmId = getIntent().getLongExtra(AlarmScheduler.EXTRA_ALARM_ID,-1);
@@ -50,6 +49,22 @@ public class RingActivity extends Activity {
         if (alarm.usesQr() && !qrDone) buildQrStage();
         else if (alarm.usesMath()) buildMathStage();
         else buildQrStage();
+    }
+
+    private void enableLockScreenAlarmUi() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true);
+            setTurnScreenOn(true);
+        } else {
+            getWindow().addFlags(
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                            | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            );
+        }
+        getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                        | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        );
     }
 
     @Override protected void onSaveInstanceState(Bundle out) {

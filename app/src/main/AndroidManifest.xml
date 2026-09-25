@@ -33,7 +33,12 @@
         </activity>
 
         <activity android:name=".EditAlarmActivity" android:exported="false" android:theme="@style/Theme.QRAlarm.EditorSheet" />
-        <activity android:name=".QrScannerActivity" android:exported="false" />
+        <activity
+            android:name=".QrScannerActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
         <activity
             android:name=".RingActivity"
             android:exported="false"

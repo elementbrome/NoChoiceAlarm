@@ -1,18 +1,25 @@
-# NoChoice Alarm — plan de test v1.5.0
+# NoChoice Alarm — plan de test v1.5.2
 
 ## Build / mise à jour
 - GitHub Actions construit `app-release.apk` avec la clé Release permanente.
-- Vérifier `versionName 1.5.0` et `versionCode 8`.
+- Vérifier `versionName 1.5.2` et `versionCode 10`.
 - Installer par-dessus la précédente Release signée et vérifier que les alarmes existantes sont conservées.
 
 ## QR — galerie / impression
 1. Créer une nouvelle alarme avec QR Code activé.
-2. Sans cliquer sur aucun bouton QR, appuyer sur Enregistrer : le dialogue de blocage doit apparaître.
-3. Fermer le dialogue, cliquer sur **Enregistrer le QR dans la galerie**, puis Enregistrer : l’alarme doit être sauvegardée.
-4. Refaire avec une nouvelle alarme, mais cliquer uniquement sur **Imprimer le QR sur A4** : le dialogue d’impression Android doit s’ouvrir et l’alarme doit ensuite pouvoir être sauvegardée.
-5. Dans l’aperçu d’impression, vérifier : A4 portrait, une seule page, QR en haut à gauche, environ 35 mm, marge environ 10 mm.
+2. Sans enregistrer ni imprimer le QR, appuyer sur **Enregistrer** : l’alarme doit être sauvegardée sans dialogue bloquant.
+3. Vérifier que **Enregistrer le QR dans la galerie** fonctionne toujours.
+4. Vérifier que **Imprimer le QR sur A4** ouvre toujours le dialogue d’impression Android.
+5. Vérifier l’aperçu : A4 portrait, une seule page, QR en haut à gauche, environ 35 mm, marge environ 10 mm.
 6. Scanner le QR imprimé / PDF à distance raisonnable pour confirmer sa lisibilité.
-7. Après avoir cliqué sur galerie ou impression, changer **QR commun / QR individuel** : l’obligation doit être réactivée.
+7. Changer **QR commun / QR individuel** puis enregistrer directement : aucun blocage ne doit apparaître.
+
+## Duplication d’alarme
+1. Dupliquer une alarme active depuis la liste.
+2. Vérifier qu’une nouvelle alarme apparaît avec les mêmes réglages mais désactivée.
+3. Vérifier que l’originale reste inchangée.
+4. Pour une alarme avec QR individuel, vérifier que la copie possède un QR différent.
+5. Modifier puis activer la copie et vérifier qu’elle peut être planifiée normalement.
 
 ## Langues
 ### Français
@@ -36,3 +43,12 @@
 - Vibration ON/OFF.
 - Test manuel de l’alarme.
 - Volume progressif.
+
+## Écran verrouillé
+1. Verrouiller le téléphone avec PIN/mot de passe/biométrie actif.
+2. Déclencher une alarme QR uniquement : l’écran de réveil doit apparaître sans déverrouillage.
+3. Appuyer sur **Scanner le QR code** : la caméra doit s’ouvrir au-dessus de l’écran verrouillé, sans demander le PIN.
+4. Scanner le QR valide : l’alarme doit s’arrêter et le téléphone doit rester verrouillé.
+5. Refaire avec une alarme Math uniquement : saisir la bonne réponse sans déverrouiller ; l’alarme doit s’arrêter et le téléphone doit rester verrouillé.
+6. Refaire avec QR + Math : scanner le QR, résoudre le calcul, puis vérifier que l’alarme s’arrête en restant verrouillé.
+7. Vérifier également sur écran éteint : l’alarme doit allumer l’écran et afficher l’interface de réveil.

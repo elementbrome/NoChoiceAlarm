@@ -17,6 +17,7 @@ import java.util.List;
 public class AlarmListAdapter extends BaseAdapter {
     public interface Listener {
         void onToggle(AlarmModel alarm, boolean enabled);
+        void onDuplicate(AlarmModel alarm);
         void onDelete(AlarmModel alarm);
     }
 
@@ -79,6 +80,18 @@ public class AlarmListAdapter extends BaseAdapter {
         identity.addView(repeat, rp);
 
         top.addView(identity, new LinearLayout.LayoutParams(0,-2,1f));
+
+        ImageButton copy = new ImageButton(context);
+        copy.setImageResource(R.drawable.ic_copy);
+        copy.setColorFilter(Ui.TEXT);
+        copy.setBackground(Ui.rounded(Ui.SURFACE_2,16,context));
+        copy.setPadding(Ui.dp(context,10),Ui.dp(context,10),Ui.dp(context,10),Ui.dp(context,10));
+        copy.setContentDescription(context.getString(R.string.duplicate_alarm_content_description));
+        copy.setFocusable(false);
+        copy.setOnClickListener(v -> listener.onDuplicate(a));
+        LinearLayout.LayoutParams cpButton = new LinearLayout.LayoutParams(Ui.dp(context,44),Ui.dp(context,44));
+        cpButton.rightMargin = Ui.dp(context,8);
+        top.addView(copy,cpButton);
 
         ImageButton trash = new ImageButton(context);
         trash.setImageResource(R.drawable.ic_delete);

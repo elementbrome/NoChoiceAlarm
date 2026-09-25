@@ -104,6 +104,10 @@ public class MainActivity extends Activity {
                 refresh();
             }
 
+            @Override public void onDuplicate(AlarmModel alarm) {
+                duplicateAlarm(alarm);
+            }
+
             @Override public void onDelete(AlarmModel alarm) {
                 confirmDelete(alarm);
             }
@@ -190,6 +194,26 @@ public class MainActivity extends Activity {
                     }
                 })
                 .show();
+    }
+
+    private void duplicateAlarm(AlarmModel source) {
+        AlarmModel copy = AlarmModel.fromJsonString(source.toJsonString());
+        if (copy == null) {
+            Toast.makeText(this,R.string.duplicate_alarm_failed,Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        long newId = System.currentTimeMillis();
+        while (AlarmStore.get(this,newId) != null) newId++;
+        copy.id = newId;
+        copy.enabled = false;
+
+        // A copied alarm that uses an individual QR must remain truly individual.
+        if (!copy.useGlobalQr) copy.customQrToken = QrUtils.newToken();
+
+        AlarmStore.save(this,copy);
+        refresh();
+        Toast.makeText(this,R.string.alarm_duplicated_disabled,Toast.LENGTH_SHORT).show();
     }
 
     private void confirmDelete(AlarmModel a) {
