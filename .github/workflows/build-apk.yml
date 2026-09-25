@@ -1,4 +1,4 @@
-name: Build APK
+name: Build signed release APK
 
 on:
   workflow_dispatch:
@@ -11,6 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -36,13 +37,49 @@ jobs:
           cache-provider: enhanced
           cache-cleanup: on-success
 
-      - name: Build debug APK
-        run: gradle :app:assembleDebug --stacktrace
+      - name: Check signing secrets
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NOCHOICE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.NOCHOICE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.NOCHOICE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.NOCHOICE_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_BASE64" || (echo "Missing NOCHOICE_KEYSTORE_BASE64" && exit 1)
+          test -n "$KEYSTORE_PASSWORD" || (echo "Missing NOCHOICE_KEYSTORE_PASSWORD" && exit 1)
+          test -n "$KEY_ALIAS" || (echo "Missing NOCHOICE_KEY_ALIAS" && exit 1)
+          test -n "$KEY_PASSWORD" || (echo "Missing NOCHOICE_KEY_PASSWORD" && exit 1)
 
-      - name: Upload APK
+      - name: Restore release keystore
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NOCHOICE_KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/app/nochoicealarm-release.jks"
+          chmod 600 "$GITHUB_WORKSPACE/app/nochoicealarm-release.jks"
+
+      - name: Build signed release APK
+        env:
+          NOCHOICE_KEYSTORE_PATH: ${{ github.workspace }}/app/nochoicealarm-release.jks
+          NOCHOICE_KEYSTORE_PASSWORD: ${{ secrets.NOCHOICE_KEYSTORE_PASSWORD }}
+          NOCHOICE_KEY_ALIAS: ${{ secrets.NOCHOICE_KEY_ALIAS }}
+          NOCHOICE_KEY_PASSWORD: ${{ secrets.NOCHOICE_KEY_PASSWORD }}
+        run: gradle :app:assembleRelease --stacktrace
+
+      - name: Verify APK signature
+        shell: bash
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
+          sha256sum app/build/outputs/apk/release/app-release.apk
+
+      - name: Remove keystore from runner
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/app/nochoicealarm-release.jks"
+
+      - name: Upload signed APK
         uses: actions/upload-artifact@v7
         with:
-          name: NoChoiceAlarm-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: NoChoiceAlarm-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14

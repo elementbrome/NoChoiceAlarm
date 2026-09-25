@@ -10,8 +10,8 @@ android {
         applicationId = "com.qralarm.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.4.0"
+        versionCode = 7
+        versionName = "1.4.1"
     }
 
     compileOptions {
@@ -19,10 +19,23 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("NOCHOICE_KEYSTORE_PATH")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("NOCHOICE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("NOCHOICE_KEY_ALIAS")
+                keyPassword = System.getenv("NOCHOICE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
