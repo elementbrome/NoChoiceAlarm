@@ -66,7 +66,7 @@ public class RingActivity extends Activity {
         root.setPadding(Ui.dp(this,28),Ui.dp(this,54),Ui.dp(this,28),Ui.dp(this,30));
         root.setBackgroundColor(Ui.BG);
 
-        TextView kicker = Ui.text(this,testMode?"TEST DU RÉVEIL":"RÉVEIL",13,Ui.PRIMARY,true);
+        TextView kicker = Ui.text(this,testMode?getString(R.string.alarm_test_kicker):getString(R.string.alarm_kicker),13,Ui.PRIMARY,true);
         kicker.setLetterSpacing(.14f);
         root.addView(kicker);
 
@@ -75,7 +75,7 @@ public class RingActivity extends Activity {
         tp.topMargin=Ui.dp(this,10);
         root.addView(time,tp);
 
-        String lbl = alarm.label == null || alarm.label.trim().isEmpty() ? "Il est l’heure" : alarm.label.trim();
+        String lbl = alarm.label == null || alarm.label.trim().isEmpty() ? getString(R.string.time_to_wake) : alarm.label.trim();
         TextView label = Ui.displayText(this,lbl,22,Ui.TEXT);
         label.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2);
@@ -93,12 +93,12 @@ public class RingActivity extends Activity {
 
     private void buildQrStage() {
         String instruction = alarm.usesMath()
-                ? "Étape 1 sur 2 · Scannez le QR code. Le problème de math apparaîtra ensuite."
-                : "Scannez le QR code imprimé pour arrêter l’alarme.";
+                ? getString(R.string.qr_stage_both)
+                : getString(R.string.qr_stage_only);
         LinearLayout root=baseLayout(instruction);
         root.addView(new Space(this),new LinearLayout.LayoutParams(1,0,1f));
 
-        Button scan = primaryButton("Scanner le QR code");
+        Button scan = primaryButton(getString(R.string.scan_qr_code));
         scan.setOnClickListener(v -> startScanner());
         root.addView(scan,new LinearLayout.LayoutParams(-1,Ui.dp(this,58)));
         addSecondaryActions(root);
@@ -112,10 +112,11 @@ public class RingActivity extends Activity {
             mathAnswer=challenge.answer;
         }
 
-        String prefix=alarm.usesQr()?"Étape 2 sur 2 · ":"";
-        LinearLayout root=baseLayout(prefix+"Résolvez le calcul pour arrêter l’alarme.");
+        LinearLayout root=baseLayout(alarm.usesQr()
+                ? getString(R.string.math_stage_both)
+                : getString(R.string.math_stage_only));
 
-        TextView difficulty=Ui.text(this,alarm.mathDifficultyLabel().toUpperCase(),12,Ui.PRIMARY,true);
+        TextView difficulty=Ui.text(this,alarm.mathDifficultyLabel(this).toUpperCase(AppLocale.uiLocale(this)),12,Ui.PRIMARY,true);
         difficulty.setLetterSpacing(.12f);
         LinearLayout.LayoutParams dp=new LinearLayout.LayoutParams(-2,-2); dp.topMargin=Ui.dp(this,28);
         root.addView(difficulty,dp);
@@ -130,7 +131,7 @@ public class RingActivity extends Activity {
         EditText answer=new EditText(this);
         answer.setTextColor(Ui.TEXT);
         answer.setHintTextColor(0xFF777C89);
-        answer.setHint("Votre réponse");
+        answer.setHint(R.string.your_answer);
         answer.setTextSize(22);
         answer.setGravity(Gravity.CENTER);
         answer.setSingleLine(true);
@@ -139,7 +140,7 @@ public class RingActivity extends Activity {
         LinearLayout.LayoutParams ap=new LinearLayout.LayoutParams(-1,Ui.dp(this,58)); ap.topMargin=Ui.dp(this,14);
         root.addView(answer,ap);
 
-        Button validate=primaryButton("Valider");
+        Button validate=primaryButton(getString(R.string.validate));
         validate.setOnClickListener(v->{
             String raw=answer.getText().toString().trim();
             if(raw.isEmpty()) return;
@@ -147,7 +148,7 @@ public class RingActivity extends Activity {
                 if(Integer.parseInt(raw)==mathAnswer) completeAlarm();
                 else {
                     answer.setText("");
-                    Toast.makeText(this,"Mauvaise réponse. Réessayez.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,R.string.wrong_answer,Toast.LENGTH_SHORT).show();
                 }
             } catch(Exception e) {
                 answer.setText("");
@@ -184,7 +185,7 @@ public class RingActivity extends Activity {
 
     private void addSecondaryActions(LinearLayout root) {
         if (!testMode && alarm.snoozeMinutes > 0) {
-            Button snooze = secondaryButton("Snooze · " + alarm.snoozeMinutes + " min",Ui.TEXT);
+            Button snooze = secondaryButton(getString(R.string.snooze_button,alarm.snoozeMinutes),Ui.TEXT);
             snooze.setOnClickListener(v -> snooze());
             LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1,Ui.dp(this,54));
             p.topMargin=Ui.dp(this,12);
@@ -192,7 +193,7 @@ public class RingActivity extends Activity {
         }
 
         if (testMode) {
-            Button stop = secondaryButton("Arrêter le test",Ui.DANGER);
+            Button stop = secondaryButton(getString(R.string.stop_test),Ui.DANGER);
             stop.setOnClickListener(v -> stopTest());
             LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1,Ui.dp(this,54));
             p.topMargin=Ui.dp(this,12);

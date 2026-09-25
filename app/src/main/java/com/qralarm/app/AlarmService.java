@@ -92,8 +92,8 @@ public class AlarmService extends Service {
     }
 
     private void createChannel() {
-        NotificationChannel ch = new NotificationChannel(CHANNEL,"Alarme en cours",NotificationManager.IMPORTANCE_HIGH);
-        ch.setDescription("Notification affichée pendant qu’une alarme sonne");
+        NotificationChannel ch = new NotificationChannel(CHANNEL,getString(R.string.ringing_channel_name),NotificationManager.IMPORTANCE_HIGH);
+        ch.setDescription(getString(R.string.ringing_channel_description));
         ch.setSound(null,null);
         ch.enableVibration(false);
         ch.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
@@ -114,15 +114,15 @@ public class AlarmService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        String baseTitle = a.label == null || a.label.trim().isEmpty() ? "Alarme" : a.label.trim();
+        String baseTitle = a.label == null || a.label.trim().isEmpty() ? getString(R.string.default_alarm_label) : a.label.trim();
         String instruction;
-        if (a.usesQr() && a.usesMath()) instruction="Scannez le QR puis résolvez le calcul";
-        else if (a.usesMath()) instruction="Résolvez le calcul pour arrêter l’alarme";
-        else instruction="Scannez le QR code pour arrêter l’alarme";
+        if (a.usesQr() && a.usesMath()) instruction=getString(R.string.ring_instruction_qr_math);
+        else if (a.usesMath()) instruction=getString(R.string.ring_instruction_math);
+        else instruction=getString(R.string.ring_instruction_qr);
 
         Notification.Builder builder = new Notification.Builder(this,CHANNEL)
                 .setSmallIcon(R.drawable.ic_alarm)
-                .setContentTitle((test ? "TEST · " : "") + baseTitle + " · " + a.timeText())
+                .setContentTitle((test ? getString(R.string.test_prefix) : "") + baseTitle + " · " + a.timeText())
                 .setContentText(instruction)
                 .setCategory(Notification.CATEGORY_ALARM)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)

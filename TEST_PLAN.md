@@ -1,46 +1,38 @@
-# Plan de test — NoChoice Alarm v1.2
+# NoChoice Alarm — plan de test v1.5.0
 
-1. Premier lancement : caméra, notifications et accès plein écran.
-2. Vérifier que l'écran principal est propre, sans chevauchement avec les zones système Android.
-3. Vérifier que la barre d'état supérieure est masquée dans l'application et que les écrans sonnerie/scanner sont immersifs.
-4. Créer une alarme QR : vérifier qu'« Enregistrer » est refusé avant l'enregistrement du QR dans la galerie.
-5. Enregistrer le QR commun, créer une deuxième alarme et vérifier que le QR affiché est identique.
-6. Créer une alarme avec « QR individuel » et vérifier que son QR diffère du QR commun.
-7. Vérifier la carte dans la liste : heure, label, jours, pastilles Mode/Snooze/Son, switch et corbeille.
-8. Vérifier que les alarmes actives sont en haut de la liste et possèdent la mise en évidence ACTIVE.
-9. Désactiver une alarme, l'éditer puis l'enregistrer : elle doit rester désactivée.
-10. Vérifier la notification silencieuse « alarme(s) active(s) » ; désactiver toutes les alarmes doit la supprimer.
-11. Cliquer sur une carte, modifier ses réglages et vérifier leur persistance.
-12. Supprimer une alarme via la corbeille et confirmer l'annulation de sa planification.
-13. Vérifier le placeholder `e.g. Running`.
-14. Tester son système et fichier audio personnalisé.
-15. Déplacer le curseur de volume : le son doit être pré-écouté et suivre le niveau choisi, puis s'arrêter après relâchement.
-16. Tester volume 0, 25, 50, 100 %.
-17. Tester les rampes 30/60/90/120 s.
-18. Vérifier vibration OFF par défaut ; activer puis vérifier la vibration lors de l'alarme/test.
-19. Vérifier les icônes des boutons QR Code et Math.
-20. Vérifier que seule la description de la difficulté Math sélectionnée est affichée.
-21. Easy : uniquement `NN + NN` ou `NN − NN` avec deux nombres à 2 chiffres.
-22. Hard : uniquement `NN × NN` avec deux nombres à 2 chiffres.
-23. Brutal : cinq opérandes, priorité ×/÷, résultat entier de 1 à 200.
-24. Tester le bouton « Tester l'alarme » et vérifier que « Arrêter le test » coupe immédiatement son, vibration et notification.
-25. Vérifier l'ordre visuel : Tester (contour) puis Enregistrer (fond coloré).
-26. Tester QR uniquement : mauvais QR = refus ; bon QR = arrêt.
-27. Tester Math uniquement : mauvaise réponse = sonnerie continue ; bonne réponse = arrêt.
-28. Tester QR + Math : le QR doit obligatoirement précéder le problème de math.
-29. Tester snooze 2/5/10/15 min.
-30. Verrouiller l'écran avant un déclenchement : vérifier sonnerie, vibration selon réglage, full-screen et notification ongoing.
-31. Redémarrer avant le déclenchement : vérifier replanification et restauration de la notification des alarmes actives.
-32. Tester changement manuel d'heure et de fuseau.
-33. Révoquer la caméra : le scanner doit demander à nouveau l'autorisation.
-34. Vérifier Android « Forcer l'arrêt » / Applications actives : le système reste capable d'arrêter l'application, limitation Android attendue.
+## Build / mise à jour
+- GitHub Actions construit `app-release.apk` avec la clé Release permanente.
+- Vérifier `versionName 1.5.0` et `versionCode 8`.
+- Installer par-dessus la précédente Release signée et vérifier que les alarmes existantes sont conservées.
 
-## v1.4 — Sélecteur d'heure et identité visuelle
+## QR — galerie / impression
+1. Créer une nouvelle alarme avec QR Code activé.
+2. Sans cliquer sur aucun bouton QR, appuyer sur Enregistrer : le dialogue de blocage doit apparaître.
+3. Fermer le dialogue, cliquer sur **Enregistrer le QR dans la galerie**, puis Enregistrer : l’alarme doit être sauvegardée.
+4. Refaire avec une nouvelle alarme, mais cliquer uniquement sur **Imprimer le QR sur A4** : le dialogue d’impression Android doit s’ouvrir et l’alarme doit ensuite pouvoir être sauvegardée.
+5. Dans l’aperçu d’impression, vérifier : A4 portrait, une seule page, QR en haut à gauche, environ 35 mm, marge environ 10 mm.
+6. Scanner le QR imprimé / PDF à distance raisonnable pour confirmer sa lisibilité.
+7. Après avoir cliqué sur galerie ou impression, changer **QR commun / QR individuel** : l’obligation doit être réactivée.
 
-- Ouvrir une alarme : le rectangle **heures** est actif au départ.
-- Sélectionner une heure sur le cadran : anneau extérieur 00–11, anneau intérieur 12–23 ; la valeur sélectionnée reste blanche.
-- Relâcher le doigt après l'heure : le sélecteur passe aux minutes et le rectangle **minutes** devient actif.
-- Sélectionner une minute : les repères 00, 05, …, 55 restent visibles et une minute intermédiaire peut être choisie précisément.
-- Activer **Vibration**, puis **Tester l'alarme** : le téléphone doit vibrer en boucle jusqu'à l'arrêt du test.
-- Vérifier le dégradé #00B09B → #96C93D sur Enregistrer, +, modes/jours/difficultés actifs et actions principales du réveil.
-- Appuyer sur **Buy me a coffee** : une explication doit apparaître ; **Ouvrir la page** doit lancer `https://buymeacoffee.com/elementbrome` dans le navigateur.
+## Langues
+### Français
+- Régler Android en français, relancer l’app.
+- Vérifier la liste, l’éditeur, les dialogues, le scanner, l’écran de sonnerie et les notifications.
+
+### Anglais
+- Régler Android en anglais, relancer l’app.
+- Vérifier les mêmes écrans en anglais.
+
+### Langue non supportée
+- Régler Android en allemand, espagnol ou italien.
+- Vérifier que les textes appartenant à NoChoice Alarm s’affichent en anglais.
+- Les écrans appartenant au système Android (permissions, impression) peuvent rester dans la langue du système.
+
+## Réveil
+- QR seul.
+- Math seul.
+- QR + Math.
+- Snooze / rappel.
+- Vibration ON/OFF.
+- Test manuel de l’alarme.
+- Volume progressif.

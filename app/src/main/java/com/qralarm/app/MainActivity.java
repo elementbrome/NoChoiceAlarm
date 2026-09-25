@@ -34,10 +34,10 @@ public class MainActivity extends Activity {
         if (!getPreferences(MODE_PRIVATE).getBoolean("intro_shown",false)) {
             getPreferences(MODE_PRIVATE).edit().putBoolean("intro_shown",true).apply();
             new AlertDialog.Builder(this)
-                    .setTitle("Autorisations nécessaires")
-                    .setMessage("NoChoice Alarm a besoin de la caméra pour les réveils QR, des notifications pour afficher le réveil et de l’autorisation plein écran pour apparaître sur l’écran verrouillé. Aucune donnée n’est envoyée sur Internet.")
+                    .setTitle(R.string.permissions_needed_title)
+                    .setMessage(R.string.permissions_needed_message)
                     .setCancelable(false)
-                    .setPositiveButton("Continuer",(d,w)->requestRuntimePermissions())
+                    .setPositiveButton(R.string.continue_button,(d,w)->requestRuntimePermissions())
                     .show();
         }
     }
@@ -54,10 +54,10 @@ public class MainActivity extends Activity {
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView title = Ui.displayText(this,"Alarmes",34,Ui.TEXT);
+        TextView title = Ui.displayText(this,getString(R.string.alarms_title),34,Ui.TEXT);
         header.addView(title,new LinearLayout.LayoutParams(0,-2,1f));
 
-        TextView coffee = Ui.text(this,"☕  Buy me a coffee",12,Ui.TEXT,true);
+        TextView coffee = Ui.text(this,getString(R.string.buy_me_a_coffee),12,Ui.TEXT,true);
         coffee.setGravity(Gravity.CENTER);
         coffee.setPadding(Ui.dp(this,12),0,Ui.dp(this,12),0);
         coffee.setBackground(Ui.softGradient(16,this));
@@ -68,7 +68,7 @@ public class MainActivity extends Activity {
         headerP.leftMargin=Ui.dp(this,22); headerP.rightMargin=Ui.dp(this,22);
         content.addView(header,headerP);
 
-        TextView subtitle = Ui.text(this,"Cliquez sur une alarme pour la modifier.",14,Ui.MUTED,false);
+        TextView subtitle = Ui.text(this,getString(R.string.alarms_subtitle),14,Ui.MUTED,false);
         LinearLayout.LayoutParams subP = new LinearLayout.LayoutParams(-1,-2);
         subP.leftMargin=Ui.dp(this,22); subP.rightMargin=Ui.dp(this,22); subP.topMargin=Ui.dp(this,4);
         content.addView(subtitle,subP);
@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
         list.setAdapter(adapter);
         list.setOnItemClickListener((p,v,pos,id)-> openEdit(adapter.getItem(pos).id));
 
-        TextView empty = Ui.text(this,"Aucune alarme\nTouchez + pour créer votre premier réveil.",16,Ui.MUTED,false);
+        TextView empty = Ui.text(this,getString(R.string.empty_alarms),16,Ui.MUTED,false);
         empty.setGravity(Gravity.CENTER);
         empty.setLineSpacing(0,1.3f);
 
@@ -167,7 +167,7 @@ public class MainActivity extends Activity {
 
     private void openEdit(long id) {
         if (!runtimePermissionsGranted()) {
-            Toast.makeText(this,"Accordez d’abord les autorisations indispensables.",Toast.LENGTH_LONG).show();
+            Toast.makeText(this,R.string.grant_permissions_first,Toast.LENGTH_LONG).show();
             requestRuntimePermissions();
             return;
         }
@@ -179,14 +179,14 @@ public class MainActivity extends Activity {
 
     private void showCoffeeInfo() {
         new AlertDialog.Builder(this)
-                .setTitle("Buy me a coffee")
-                .setMessage("NoChoice Alarm est et restera gratuit. Si le projet vous aide et que vous souhaitez soutenir son développement, vous pouvez m’offrir un café. Le don est entièrement facultatif.")
-                .setNegativeButton("Plus tard",null)
-                .setPositiveButton("Ouvrir la page",(d,w)-> {
+                .setTitle(R.string.buy_me_a_coffee)
+                .setMessage(R.string.coffee_message)
+                .setNegativeButton(R.string.later,null)
+                .setPositiveButton(R.string.open_page,(d,w)-> {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/elementbrome")));
                     } catch (Exception e) {
-                        Toast.makeText(this,"Impossible d’ouvrir le lien.",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,R.string.unable_open_link,Toast.LENGTH_SHORT).show();
                     }
                 })
                 .show();
@@ -195,10 +195,10 @@ public class MainActivity extends Activity {
     private void confirmDelete(AlarmModel a) {
         String lbl = a.label == null ? "" : a.label.trim();
         new AlertDialog.Builder(this)
-                .setTitle("Supprimer l’alarme ?")
+                .setTitle(R.string.delete_alarm_title)
                 .setMessage(a.timeText() + (lbl.isEmpty()?"":" · "+lbl))
-                .setNegativeButton("Annuler",null)
-                .setPositiveButton("Supprimer",(d,w)-> {
+                .setNegativeButton(R.string.cancel,null)
+                .setPositiveButton(R.string.delete,(d,w)-> {
                     AlarmScheduler.cancelRegular(this,a.id);
                     AlarmScheduler.cancelSnooze(this,a.id);
                     AlarmStore.delete(this,a.id);
@@ -233,10 +233,10 @@ public class MainActivity extends Activity {
         if (requestCode==REQ_PERMS) {
             if (runtimePermissionsGranted()) { AlarmStatusNotifier.update(this); maybeRequestFullScreenAccess(); }
             else new AlertDialog.Builder(this)
-                    .setTitle("Autorisation requise")
-                    .setMessage("Sans caméra et notifications, NoChoice Alarm ne peut pas garantir le fonctionnement prévu. Vous pouvez réactiver ces autorisations dans les réglages de l’application.")
-                    .setNegativeButton("Fermer",null)
-                    .setPositiveButton("Réglages",(d,w)-> {
+                    .setTitle(R.string.permission_required_title)
+                    .setMessage(R.string.permission_required_message)
+                    .setNegativeButton(R.string.close,null)
+                    .setPositiveButton(R.string.settings,(d,w)-> {
                         try { startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:"+getPackageName()))); }
                         catch(Exception ignored) {}
                     }).show();
@@ -250,10 +250,10 @@ public class MainActivity extends Activity {
         if (getPreferences(MODE_PRIVATE).getBoolean("fsi_prompted",false)) return;
         getPreferences(MODE_PRIVATE).edit().putBoolean("fsi_prompted",true).apply();
         new AlertDialog.Builder(this)
-                .setTitle("Affichage plein écran")
-                .setMessage("Autorisez NoChoice Alarm à afficher un réveil en plein écran, même lorsque le téléphone est verrouillé.")
-                .setNegativeButton("Plus tard",null)
-                .setPositiveButton("Ouvrir les réglages",(d,w)-> openFullScreenSettings()).show();
+                .setTitle(R.string.fullscreen_title)
+                .setMessage(R.string.fullscreen_message)
+                .setNegativeButton(R.string.later,null)
+                .setPositiveButton(R.string.open_settings,(d,w)-> openFullScreenSettings()).show();
     }
 
     private void openFullScreenSettings() {
@@ -264,12 +264,12 @@ public class MainActivity extends Activity {
 
     private void updatePermissionWarning() {
         StringBuilder sb = new StringBuilder();
-        if (!runtimePermissionsGranted()) sb.append("Autorisations manquantes — touchez ici pour corriger.");
+        if (!runtimePermissionsGranted()) sb.append(getString(R.string.missing_permissions_warning));
         if (Build.VERSION.SDK_INT >= 34) {
             NotificationManager nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
             if (!nm.canUseFullScreenIntent()) {
                 if (sb.length()>0) sb.append("\n");
-                sb.append("Affichage plein écran non autorisé.");
+                sb.append(getString(R.string.fullscreen_not_allowed_warning));
             }
         }
         permissionWarning.setText(sb.toString());

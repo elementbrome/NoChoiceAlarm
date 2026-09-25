@@ -57,7 +57,7 @@ public class AlarmListAdapter extends BaseAdapter {
         identity.setOrientation(LinearLayout.VERTICAL);
 
         if (a.enabled) {
-            TextView active = Ui.text(context,"ACTIVE",11,Ui.PRIMARY,true);
+            TextView active = Ui.text(context,context.getString(R.string.active_badge),11,Ui.PRIMARY,true);
             active.setLetterSpacing(.12f);
             identity.addView(active,new LinearLayout.LayoutParams(-2,-2));
         }
@@ -67,13 +67,13 @@ public class AlarmListAdapter extends BaseAdapter {
         timeP.topMargin = a.enabled ? Ui.dp(context,2) : 0;
         identity.addView(time,timeP);
 
-        String labelText = a.label == null || a.label.trim().isEmpty() ? "Alarme" : a.label.trim();
+        String labelText = a.label == null || a.label.trim().isEmpty() ? context.getString(R.string.default_alarm_label) : a.label.trim();
         TextView label = Ui.text(context, labelText, 16, a.enabled ? Ui.TEXT : 0xFF777C89, true);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2,-2);
         lp.topMargin = Ui.dp(context,2);
         identity.addView(label, lp);
 
-        TextView repeat = Ui.text(context, a.repeatText(), 13, a.enabled ? 0xFFB9E6A4 : Ui.MUTED, false);
+        TextView repeat = Ui.text(context, a.repeatText(context), 13, a.enabled ? 0xFFB9E6A4 : Ui.MUTED, false);
         LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-2,-2);
         rp.topMargin = Ui.dp(context,3);
         identity.addView(repeat, rp);
@@ -84,7 +84,7 @@ public class AlarmListAdapter extends BaseAdapter {
         trash.setImageResource(R.drawable.ic_delete);
         trash.setBackground(Ui.rounded(Ui.SURFACE_2,16,context));
         trash.setPadding(Ui.dp(context,10),Ui.dp(context,10),Ui.dp(context,10),Ui.dp(context,10));
-        trash.setContentDescription("Supprimer l’alarme");
+        trash.setContentDescription(context.getString(R.string.delete_alarm_content_description));
         trash.setFocusable(false);
         trash.setOnClickListener(v -> listener.onDelete(a));
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(Ui.dp(context,44),Ui.dp(context,44));
@@ -103,7 +103,7 @@ public class AlarmListAdapter extends BaseAdapter {
         LinearLayout chips = new LinearLayout(context);
         chips.setOrientation(LinearLayout.HORIZONTAL);
         chips.setGravity(Gravity.CENTER_VERTICAL);
-        String[] texts = {a.modeChipText(), a.snoozeChipText(), a.soundChipText()};
+        String[] texts = {a.modeChipText(context), a.snoozeChipText(context), a.soundChipText(context)};
         for (int i=0;i<texts.length;i++) {
             TextView chip = Ui.chip(context,texts[i]);
             if (!a.enabled) chip.setTextColor(Ui.MUTED);

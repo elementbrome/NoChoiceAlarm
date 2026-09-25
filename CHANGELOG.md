@@ -1,21 +1,23 @@
 # Changelog
 
+## 1.5.0 (versionCode 8)
+
+- Ajout d’un bouton **Imprimer le QR sur A4** sous l’enregistrement dans la galerie.
+- Le document d’impression est préparé en **A4 portrait**, avec un QR compact d’environ **35 mm**, placé à environ **10 mm du coin supérieur gauche**.
+- La création d’une nouvelle alarme QR est désormais autorisée dès que l’utilisateur a soit :
+  - enregistré le QR dans la galerie ;
+  - ouvert l’impression A4.
+- Le blocage est réactivé si le QR change (par exemple passage de QR commun à QR individuel).
+- Internationalisation complète de l’interface utilisateur :
+  - système en français → interface française ;
+  - toute autre langue → interface anglaise par défaut.
+- Localisation des écrans, alertes, notifications persistantes, notification de réveil et scanner QR.
+- Conservation de la signature Release permanente et de l’icône PNG actuelle.
+- Version : `1.5.0`, `versionCode 8`.
+
 ## 1.4.0
 
-- Nouveau sélecteur d'heure radial sombre avec disque, pointeur et deux anneaux d'heures (00–11 / 12–23).
-- Affichage de l'heure et des minutes dans deux petites cartes arrondies, avec mise en évidence de la partie en cours d'édition.
-- Valeur sélectionnée du cadran toujours blanche.
-- Cadran des minutes 00–55 par pas de 5, avec sélection précise de chaque minute.
-- Correction de la vibration pendant le mode de test via le VibratorManager moderne et l'usage système ALARM.
-- Description Brutal simplifiée.
-- Nouvelle identité visuelle avec un dégradé #00B09B → #96C93D sur les actions principales et sélections actives.
-- Bouton Buy me a coffee relié à https://buymeacoffee.com/elementbrome avec explication avant ouverture.
-- Accent Android et icône par défaut harmonisés avec la nouvelle palette.
-
-## 1.3.0
-
-- Éditeur d'alarme sous forme de bottom sheet extensible.
-- Bouton Enregistrer fixe en bas.
-- Sélecteur d'heure personnalisé.
-- Style typographique géométrique pour les heures et titres.
-- Bouton Buy me a coffee ajouté à l'accueil.
+- Sélecteur d’heure modernisé.
+- Dégradé turquoise → vert.
+- Vibration et mode test améliorés.
+- Buy me a coffee.

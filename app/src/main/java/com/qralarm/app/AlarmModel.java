@@ -1,5 +1,7 @@
 package com.qralarm.app;
 
+import android.content.Context;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -70,7 +72,6 @@ public class AlarmModel {
         a.customQrToken = o.optString("customQrToken", o.optString("qrToken", ""));
         a.volumePercent = clamp(o.optInt("volumePercent", 100), 0, 100);
         a.volumeRampSeconds = normalizeRamp(o.optInt("volumeRampSeconds", 0));
-        // v1.2 migration: vibration is OFF unless the user explicitly enables it.
         a.vibrationEnabled = o.optBoolean("vibrationEnabled", false);
         return a;
     }
@@ -86,13 +87,13 @@ public class AlarmModel {
     }
 
     public String timeText() {
-        return String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
+        return String.format(Locale.ROOT, "%02d:%02d", hour, minute);
     }
 
-    public String repeatText() {
-        if (repeatMask == 0) return "Une fois";
-        if (repeatMask == 0b1111111) return "Tous les jours";
-        String[] names = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
+    public String repeatText(Context context) {
+        if (repeatMask == 0) return context.getString(R.string.repeat_once);
+        if (repeatMask == 0b1111111) return context.getString(R.string.repeat_every_day);
+        String[] names = context.getResources().getStringArray(R.array.repeat_day_short);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 7; i++) {
             if ((repeatMask & (1 << i)) != 0) {
@@ -106,25 +107,30 @@ public class AlarmModel {
     public boolean usesQr() { return (wakeModeMask & MODE_QR) != 0; }
     public boolean usesMath() { return (wakeModeMask & MODE_MATH) != 0; }
 
-    public String modeChipText() {
-        if (usesQr() && usesMath()) return "QR Code + Math";
-        if (usesMath()) return "Math";
-        return "QR Code";
+    public String modeChipText(Context context) {
+        if (usesQr() && usesMath()) return context.getString(R.string.mode_qr_math);
+        if (usesMath()) return context.getString(R.string.mode_math);
+        return context.getString(R.string.mode_qr);
     }
 
-    public String snoozeChipText() {
-        return snoozeMinutes <= 0 ? "Snooze Off" : "Snooze " + snoozeMinutes + "m";
+    public String snoozeChipText(Context context) {
+        return snoozeMinutes <= 0
+                ? context.getString(R.string.snooze_off_chip)
+                : context.getString(R.string.snooze_minutes_chip, snoozeMinutes);
     }
 
-    public String soundChipText() {
-        if (soundUri == null || soundUri.isEmpty()) return "System alarm";
-        return soundName == null || soundName.trim().isEmpty() ? "Custom sound" : soundName.trim();
+    public String soundChipText(Context context) {
+        if (soundUri == null || soundUri.isEmpty()) return context.getString(R.string.system_alarm);
+        if (soundName == null || soundName.trim().isEmpty() || "Custom sound".equals(soundName)) {
+            return context.getString(R.string.custom_sound);
+        }
+        return soundName.trim();
     }
 
-    public String mathDifficultyLabel() {
-        if (MATH_HARD.equals(mathDifficulty)) return "Hard";
-        if (MATH_BRUTAL.equals(mathDifficulty)) return "Brutal";
-        return "Easy";
+    public String mathDifficultyLabel(Context context) {
+        if (MATH_HARD.equals(mathDifficulty)) return context.getString(R.string.difficulty_hard);
+        if (MATH_BRUTAL.equals(mathDifficulty)) return context.getString(R.string.difficulty_brutal);
+        return context.getString(R.string.difficulty_easy);
     }
 
     private static int clamp(int v, int min, int max) { return Math.max(min, Math.min(max, v)); }

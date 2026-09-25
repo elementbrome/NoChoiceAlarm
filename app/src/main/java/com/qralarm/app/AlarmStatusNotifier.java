@@ -36,7 +36,7 @@ public final class AlarmStatusNotifier {
     private static void updateInternal(Context context) {
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
-        createChannel(nm);
+        createChannel(context,nm);
 
         if (Build.VERSION.SDK_INT >= 33
                 && context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -60,17 +60,17 @@ public final class AlarmStatusNotifier {
         int max = Math.min(enabled.size(), 5);
         for (int i = 0; i < max; i++) {
             AlarmModel a = enabled.get(i);
-            String label = a.label == null || a.label.trim().isEmpty() ? "Alarme" : a.label.trim();
+            String label = a.label == null || a.label.trim().isEmpty() ? context.getString(R.string.default_alarm_label) : a.label.trim();
             long next = AlarmScheduler.nextTrigger(a, System.currentTimeMillis());
-            String day = new SimpleDateFormat("EEE", Locale.getDefault()).format(new Date(next));
+            String day = new SimpleDateFormat("EEE", AppLocale.uiLocale(context)).format(new Date(next));
             inbox.addLine(day + " · " + a.timeText() + " · " + label);
         }
-        if (enabled.size() > max) inbox.setSummaryText("+" + (enabled.size() - max) + " autre(s)");
+        if (enabled.size() > max) inbox.setSummaryText(context.getString(R.string.more_alarms, enabled.size() - max));
 
         AlarmModel first = enabled.get(0);
-        String firstLabel = first.label == null || first.label.trim().isEmpty() ? "Alarme" : first.label.trim();
-        String title = enabled.size() == 1 ? "1 alarme active" : enabled.size() + " alarmes actives";
-        String text = "Prochaine : " + first.timeText() + " · " + firstLabel;
+        String firstLabel = first.label == null || first.label.trim().isEmpty() ? context.getString(R.string.default_alarm_label) : first.label.trim();
+        String title = enabled.size() == 1 ? context.getString(R.string.active_alarm_single) : context.getString(R.string.active_alarm_multiple, enabled.size());
+        String text = context.getString(R.string.next_alarm, first.timeText(), firstLabel);
 
         Notification n = new Notification.Builder(context, CHANNEL)
                 .setSmallIcon(R.drawable.ic_alarm)
@@ -87,10 +87,10 @@ public final class AlarmStatusNotifier {
         nm.notify(ID, n);
     }
 
-    private static void createChannel(NotificationManager nm) {
+    private static void createChannel(Context context, NotificationManager nm) {
         NotificationChannel ch = new NotificationChannel(
-                CHANNEL, "Alarmes actives", NotificationManager.IMPORTANCE_LOW);
-        ch.setDescription("Affiche silencieusement les alarmes activées");
+                CHANNEL, context.getString(R.string.scheduled_channel_name), NotificationManager.IMPORTANCE_LOW);
+        ch.setDescription(context.getString(R.string.scheduled_channel_description));
         ch.setSound(null, null);
         ch.enableVibration(false);
         ch.setShowBadge(true);

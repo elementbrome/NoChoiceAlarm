@@ -68,7 +68,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         surface.getHolder().addCallback(this);
         root.addView(surface,new FrameLayout.LayoutParams(-1,-1));
 
-        TextView overlay = Ui.text(this,"Cadrez le QR code imprimé",18,Color.WHITE,true);
+        TextView overlay = Ui.text(this,getString(R.string.scanner_frame_qr),18,Color.WHITE,true);
         overlay.setGravity(Gravity.CENTER);
         overlay.setPadding(Ui.dp(this,18),Ui.dp(this,12),Ui.dp(this,18),Ui.dp(this,12));
         overlay.setBackground(Ui.rounded(0xDD161921,16,this));
@@ -76,7 +76,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         p.topMargin = Ui.dp(this,48);
         root.addView(overlay,p);
 
-        TextView hint = Ui.text(this,"La validation est automatique dès que le bon QR est reconnu.",14,Color.WHITE,false);
+        TextView hint = Ui.text(this,getString(R.string.scanner_auto_validation),14,Color.WHITE,false);
         hint.setGravity(Gravity.CENTER);
         hint.setPadding(Ui.dp(this,20),Ui.dp(this,12),Ui.dp(this,20),Ui.dp(this,12));
         FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM);
@@ -101,7 +101,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
             camera.setDisplayOrientation(90);
             startPreview(surface.getHolder());
         } catch (Exception e) {
-            Toast.makeText(this,"Impossible d’ouvrir la caméra.",Toast.LENGTH_LONG).show();
+            Toast.makeText(this,R.string.camera_open_failed,Toast.LENGTH_LONG).show();
         }
     }
 
@@ -112,7 +112,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
             camera.setPreviewCallback(this);
             camera.startPreview();
         } catch (Exception e) {
-            Toast.makeText(this,"Aperçu caméra indisponible.",Toast.LENGTH_LONG).show();
+            Toast.makeText(this,R.string.camera_preview_failed,Toast.LENGTH_LONG).show();
         }
     }
 
@@ -128,7 +128,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
             if (result != null) {
                 String expected = QrUtils.payload(expectedToken);
                 if (expected.equals(result.getText())) runOnUiThread(this::success);
-                else runOnUiThread(() -> Toast.makeText(this,"Ce QR code n’est pas valide pour cette alarme.",Toast.LENGTH_SHORT).show());
+                else runOnUiThread(() -> Toast.makeText(this,R.string.wrong_qr,Toast.LENGTH_SHORT).show());
             }
         } catch (Exception ignored) {
         } finally {
@@ -168,7 +168,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         if (requestCode == REQ_CAMERA) {
             if (grants.length>0 && grants[0]==PackageManager.PERMISSION_GRANTED) maybeOpenCamera();
             else {
-                Toast.makeText(this,"La caméra est nécessaire pour valider le QR code.",Toast.LENGTH_LONG).show();
+                Toast.makeText(this,R.string.camera_required_qr,Toast.LENGTH_LONG).show();
                 finish();
             }
         }

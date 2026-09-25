@@ -123,7 +123,7 @@ public class MinimalClockView extends View {
             float x = cx + (float) Math.cos(rad) * outerRadius;
             float y = cy + (float) Math.sin(rad) * outerRadius - (textPaint.ascent() + textPaint.descent()) / 2f;
             Paint p = hour == i ? selectedTextPaint : textPaint;
-            canvas.drawText(String.format(Locale.getDefault(), "%02d", i), x, y, p);
+            canvas.drawText(String.format(Locale.ROOT, "%02d", i), x, y, p);
         }
 
         for (int i = 0; i < 12; i++) {
@@ -132,7 +132,7 @@ public class MinimalClockView extends View {
             float x = cx + (float) Math.cos(rad) * innerRadius;
             float y = cy + (float) Math.sin(rad) * innerRadius - (innerTextPaint.ascent() + innerTextPaint.descent()) / 2f;
             Paint p = hour == value ? selectedTextPaint : innerTextPaint;
-            canvas.drawText(String.format(Locale.getDefault(), "%02d", value), x, y, p);
+            canvas.drawText(String.format(Locale.ROOT, "%02d", value), x, y, p);
         }
     }
 
@@ -154,13 +154,13 @@ public class MinimalClockView extends View {
             float x = cx + (float) Math.cos(rad) * labelRadius;
             float y = cy + (float) Math.sin(rad) * labelRadius - (textPaint.ascent() + textPaint.descent()) / 2f;
             Paint p = value == minute ? selectedTextPaint : textPaint;
-            canvas.drawText(String.format(Locale.getDefault(), "%02d", value), x, y, p);
+            canvas.drawText(String.format(Locale.ROOT, "%02d", value), x, y, p);
         }
 
         // If the selected minute is between the visible 5-minute labels, show it on the pointer bubble.
         if (minute % 5 != 0) {
             float y = sy - (selectedTextPaint.ascent() + selectedTextPaint.descent()) / 2f;
-            canvas.drawText(String.format(Locale.getDefault(), "%02d", minute), sx, y, selectedTextPaint);
+            canvas.drawText(String.format(Locale.ROOT, "%02d", minute), sx, y, selectedTextPaint);
         }
     }
 
