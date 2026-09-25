@@ -203,7 +203,7 @@ public class EditAlarmActivity extends Activity {
         LinearLayout volumeTop = new LinearLayout(this);
         volumeTop.setGravity(Gravity.CENTER_VERTICAL);
         volumeTop.addView(Ui.text(this,"Volume de l’alarme",16,Ui.TEXT,true),new LinearLayout.LayoutParams(0,-2,1f));
-        volumeValue = Ui.text(this,alarm.volumePercent+"%",14,Ui.PRIMARY,true);
+        volumeValue = Ui.text(this,alarm.volumePercent+"%",14,Ui.ACCENT_START,true);
         volumeTop.addView(volumeValue);
         volumeCard.addView(volumeTop,new LinearLayout.LayoutParams(-1,-2));
 
@@ -299,6 +299,7 @@ public class EditAlarmActivity extends Activity {
         saveBar.setPadding(Ui.dp(this,20),Ui.dp(this,10),Ui.dp(this,20),Ui.dp(this,14));
         saveBar.setBackgroundColor(Ui.BG);
         Button save = button("Enregistrer",Color.WHITE,Ui.PRIMARY);
+        save.setBackground(Ui.gradient(16,this));
         save.setTextSize(17);
         save.setOnClickListener(v->saveAlarm());
         saveBar.addView(save,new LinearLayout.LayoutParams(-1,Ui.dp(this,60)));
@@ -325,34 +326,45 @@ public class EditAlarmActivity extends Activity {
         display.setGravity(Gravity.CENTER);
         display.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams displayP = new LinearLayout.LayoutParams(-1,-2);
-        displayP.topMargin=Ui.dp(this,12);
+        displayP.topMargin=Ui.dp(this,14);
+        displayP.bottomMargin=Ui.dp(this,8);
         root.addView(display,displayP);
 
-        hourDisplay = Ui.displayText(this,two(alarm.hour),50,Ui.TEXT);
+        hourDisplay = Ui.displayText(this,two(alarm.hour),38,Ui.TEXT);
         hourDisplay.setGravity(Gravity.CENTER);
-        minuteDisplay = Ui.displayText(this,two(alarm.minute),50,Ui.TEXT);
+        minuteDisplay = Ui.displayText(this,two(alarm.minute),38,Ui.TEXT);
         minuteDisplay.setGravity(Gravity.CENTER);
-        TextView colon = Ui.displayText(this,":",48,Ui.MUTED);
+        TextView colon = Ui.displayText(this,":",38,Ui.MUTED);
         colon.setGravity(Gravity.CENTER);
 
-        display.addView(hourDisplay,new LinearLayout.LayoutParams(Ui.dp(this,94),Ui.dp(this,76)));
-        display.addView(colon,new LinearLayout.LayoutParams(Ui.dp(this,28),Ui.dp(this,76)));
-        display.addView(minuteDisplay,new LinearLayout.LayoutParams(Ui.dp(this,94),Ui.dp(this,76)));
+        display.addView(hourDisplay,new LinearLayout.LayoutParams(Ui.dp(this,88),Ui.dp(this,66)));
+        display.addView(colon,new LinearLayout.LayoutParams(Ui.dp(this,30),Ui.dp(this,66)));
+        display.addView(minuteDisplay,new LinearLayout.LayoutParams(Ui.dp(this,88),Ui.dp(this,66)));
 
         timePicker = new MinimalClockView(this);
         timePicker.setTime(alarm.hour,alarm.minute);
         timePicker.setListener((hour,minute,mode)-> {
             hourDisplay.setText(two(hour));
             minuteDisplay.setText(two(minute));
-            hourDisplay.setTextColor(Ui.TEXT);
-            minuteDisplay.setTextColor(Ui.TEXT);
+            updateTimeDisplayStyle(mode);
         });
         hourDisplay.setOnClickListener(v->timePicker.setMode(MinimalClockView.MODE_HOUR));
         minuteDisplay.setOnClickListener(v->timePicker.setMode(MinimalClockView.MODE_MINUTE));
         timePicker.setMode(MinimalClockView.MODE_HOUR);
-        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1,Ui.dp(this,300));
+        updateTimeDisplayStyle(MinimalClockView.MODE_HOUR);
+
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1,Ui.dp(this,306));
         cp.topMargin=Ui.dp(this,2);
         root.addView(timePicker,cp);
+    }
+
+    private void updateTimeDisplayStyle(int mode) {
+        if (hourDisplay == null || minuteDisplay == null) return;
+        boolean hourActive = mode == MinimalClockView.MODE_HOUR;
+        hourDisplay.setBackground(hourActive ? Ui.gradient(16,this) : Ui.rounded(Ui.SURFACE_2,16,this));
+        minuteDisplay.setBackground(!hourActive ? Ui.gradient(16,this) : Ui.rounded(Ui.SURFACE_2,16,this));
+        hourDisplay.setTextColor(hourActive ? Color.WHITE : Ui.TEXT);
+        minuteDisplay.setTextColor(!hourActive ? Color.WHITE : Ui.TEXT);
     }
 
     private View buildEditLockOverlay() {
@@ -415,8 +427,8 @@ public class EditAlarmActivity extends Activity {
         LinearLayout.LayoutParams qrp=new LinearLayout.LayoutParams(-1,-2); qrp.topMargin=Ui.dp(this,12);
         parent.addView(qrImage,qrp);
 
-        qrSaveButton=button("Enregistrer le QR dans la galerie",Ui.PRIMARY,Ui.SURFACE_2);
-        qrSaveButton.setBackground(Ui.outlined(Ui.SURFACE_2,Ui.STROKE,this));
+        qrSaveButton=button("Enregistrer le QR dans la galerie",Ui.ACCENT_START,Ui.SURFACE_2);
+        qrSaveButton.setBackground(Ui.outlined(Ui.SURFACE_2,Ui.ACCENT_START,16,this));
         qrSaveButton.setOnClickListener(v->downloadQr());
         LinearLayout.LayoutParams dp=new LinearLayout.LayoutParams(-1,Ui.dp(this,52)); dp.topMargin=Ui.dp(this,10);
         parent.addView(qrSaveButton,dp);
@@ -461,7 +473,7 @@ public class EditAlarmActivity extends Activity {
 
     private Button outlinedButton(String text) {
         Button b=button(text,Ui.TEXT,Color.TRANSPARENT);
-        b.setBackground(Ui.outlined(Color.TRANSPARENT,Ui.PRIMARY,16,this));
+        b.setBackground(Ui.outlined(Color.TRANSPARENT,Ui.ACCENT_START,16,this));
         return b;
     }
 
@@ -520,7 +532,7 @@ public class EditAlarmActivity extends Activity {
     private void updateDayStyle(int i) {
         boolean on=(alarm.repeatMask&(1<<i))!=0;
         dayViews[i].setTextColor(on?Color.WHITE:Ui.TEXT);
-        dayViews[i].setBackground(on?Ui.rounded(Ui.PRIMARY,22,this):Ui.rounded(Ui.SURFACE,22,this));
+        dayViews[i].setBackground(on?Ui.gradient(22,this):Ui.rounded(Ui.SURFACE,22,this));
     }
 
     private void toggleMode(int bit) {
@@ -542,6 +554,8 @@ public class EditAlarmActivity extends Activity {
         qrSavedThisSession=false;
         qrSaveRequired=true;
         qrSaveButton.setText("Enregistrer le QR dans la galerie");
+        qrSaveButton.setTextColor(Ui.ACCENT_START);
+        qrSaveButton.setBackground(Ui.outlined(Ui.SURFACE_2,Ui.ACCENT_START,16,this));
         refreshQr();
         updateQrScopeStyles();
     }
@@ -558,7 +572,7 @@ public class EditAlarmActivity extends Activity {
 
     private void styleModeButton(LinearLayout v,boolean selected) {
         if (v == null) return;
-        v.setBackground(selected?Ui.rounded(Ui.PRIMARY,15,this):Ui.rounded(Ui.SURFACE,15,this));
+        v.setBackground(selected?Ui.gradient(15,this):Ui.rounded(Ui.SURFACE,15,this));
         Object tag=v.getTag();
         if(tag instanceof TextView) ((TextView)tag).setTextColor(selected?Color.WHITE:Ui.TEXT);
         for(int i=0;i<v.getChildCount();i++) if(v.getChildAt(i) instanceof ImageView) v.getChildAt(i).setAlpha(selected?1f:.76f);
@@ -566,7 +580,7 @@ public class EditAlarmActivity extends Activity {
 
     private void styleSelectable(TextView v,boolean selected) {
         v.setTextColor(selected?Color.WHITE:Ui.TEXT);
-        v.setBackground(selected?Ui.rounded(Ui.PRIMARY,15,this):Ui.rounded(Ui.SURFACE,15,this));
+        v.setBackground(selected?Ui.gradient(15,this):Ui.rounded(Ui.SURFACE,15,this));
     }
 
     private void updateDifficultyStyles() {
@@ -578,7 +592,7 @@ public class EditAlarmActivity extends Activity {
             if (AlarmModel.MATH_HARD.equals(alarm.mathDifficulty)) {
                 difficultyDescription.setText("Hard : multiplication avec 2 nombres à 2 chiffres.");
             } else if (AlarmModel.MATH_BRUTAL.equals(alarm.mathDifficulty)) {
-                difficultyDescription.setText("Brutal : 5 nombres avec +, −, ×, ÷ et priorité des opérations ; résultat final entre 1 et 200.");
+                difficultyDescription.setText("Brutal : 5 nombres avec +, −, ×, ÷ et priorité des opérations.");
             } else {
                 difficultyDescription.setText("Easy : addition ou soustraction avec 2 nombres à 2 chiffres.");
             }
@@ -689,6 +703,8 @@ public class EditAlarmActivity extends Activity {
             qrSavedThisSession=true;
             qrSaveRequired=false;
             qrSaveButton.setText("QR enregistré ✓");
+            qrSaveButton.setTextColor(Color.WHITE);
+            qrSaveButton.setBackground(Ui.gradient(16,this));
             Toast.makeText(this,"QR code enregistré dans la galerie.",Toast.LENGTH_LONG).show();
         } catch(Exception e) {
             Toast.makeText(this,"Impossible d’enregistrer l’image : "+e.getMessage(),Toast.LENGTH_LONG).show();

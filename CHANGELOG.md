@@ -1,52 +1,21 @@
 # Changelog
 
+## 1.4.0
+
+- Nouveau sélecteur d'heure radial sombre avec disque, pointeur et deux anneaux d'heures (00–11 / 12–23).
+- Affichage de l'heure et des minutes dans deux petites cartes arrondies, avec mise en évidence de la partie en cours d'édition.
+- Valeur sélectionnée du cadran toujours blanche.
+- Cadran des minutes 00–55 par pas de 5, avec sélection précise de chaque minute.
+- Correction de la vibration pendant le mode de test via le VibratorManager moderne et l'usage système ALARM.
+- Description Brutal simplifiée.
+- Nouvelle identité visuelle avec un dégradé #00B09B → #96C93D sur les actions principales et sélections actives.
+- Bouton Buy me a coffee relié à https://buymeacoffee.com/elementbrome avec explication avant ouverture.
+- Accent Android et icône par défaut harmonisés avec la nouvelle palette.
+
 ## 1.3.0
-- Éditeur d’alarme transformé en panneau coulissant depuis le bas, ouvert à mi-écran.
-- Glisser vers le haut pour déverrouiller l’édition, glisser vers le bas pour fermer sans sauvegarder.
-- Bouton Enregistrer fixe en bas ; le reste de l’éditeur défile.
-- Nouveau sélecteur d’heure minimaliste sans cadran de fond ni pastille de sélection.
-- Alignement propre des icônes QR Code et Math.
-- Suppression des descriptions Vibration et Mode test.
-- Typographie display géométrique inspirée de Zen Dots pour les heures et titres.
-- Bouton Buy me a coffee discret sur l’accueil (information uniquement, pas encore de lien).
-- Guide pour remplacer l’icône de l’application.
 
-## 1.2.1 — 2026-09-25
-
-- Correctif de crash au lancement sur certains appareils / états de mise à jour.
-- Gestion des barres système rendue défensive et déclenchée après l'attachement de la vue.
-- Une erreur de notification de résumé ne peut plus fermer l'application.
-- Récupération d'une ancienne alarme active protégée contre les erreurs de démarrage de service.
-- Service de sonnerie déclaré comme `mediaPlayback` avec `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, type correspondant à sa fonction audio.
-- Version code portée à 4 (`1.2.1`).
-
-## 1.2.0 — 2026-09-25
-
-- Workflow GitHub Actions passé de Basic Caching à Enhanced Caching.
-- Écran principal et édition mieux adaptés aux barres système Android ; barre d'état masquée dans l'app, écrans de réveil/scanner immersifs.
-- En-tête de création/édition simplifié : le bouton Enregistrer est déplacé en bas.
-- Bouton Tester en style contour/transparent et bouton Enregistrer mis en avant avec fond coloré.
-- Placeholder du label : `e.g. Running`.
-- Description Math dynamique : seule la difficulté sélectionnée est décrite.
-- Easy : addition/soustraction avec deux nombres à 2 chiffres.
-- Hard : multiplication avec deux nombres à 2 chiffres.
-- Brutal inchangé : 5 opérandes, priorité des opérations, résultat 1–200.
-- Pré-écoute automatique de la sonnerie pendant le réglage du volume.
-- Vibration configurable, désactivée par défaut.
-- Icônes ajoutées aux modes QR Code et Math.
-- Notification silencieuse persistante résumant les alarmes actives.
-- Alarmes actives triées en haut de la liste et davantage mises en évidence visuellement.
-- Correction UX : modifier une alarme désactivée ne la réactive plus automatiquement.
-
-## 1.1.0 — 2026-09-25
-
-- Nouveau thème sombre.
-- Cartes d'alarmes enrichies : label, répétition, Mode, Snooze, son, corbeille.
-- Modification par clic et suppression explicite.
-- QR commun par défaut + QR individuel optionnel.
-- Enregistrement du QR obligatoire lorsqu'un QR nouveau/modifié doit être utilisé.
-- Mode Math : Easy, Hard, Brutal.
-- Combinaison QR + Math avec ordre imposé QR puis calcul.
-- Test d'alarme sans enregistrer, avec arrêt manuel dédié.
-- Volume 0–100 % et montée progressive 30/60/90/120 s.
-- Workflow GitHub Actions migré vers des actions Node 24 récentes et Ubuntu 24.04.
+- Éditeur d'alarme sous forme de bottom sheet extensible.
+- Bouton Enregistrer fixe en bas.
+- Sélecteur d'heure personnalisé.
+- Style typographique géométrique pour les heures et titres.
+- Bouton Buy me a coffee ajouté à l'accueil.

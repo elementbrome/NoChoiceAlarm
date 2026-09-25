@@ -52,7 +52,7 @@ Un nouveau problème est généré aléatoirement à chaque réveil. L'éditeur 
 
 - **Easy** : addition ou soustraction de deux nombres à 2 chiffres.
 - **Hard** : multiplication de deux nombres à 2 chiffres.
-- **Brutal** : expression à 5 opérandes avec `+`, `−`, `×`, `÷`, priorité standard des opérations, divisions exactes et résultat final entre 1 et 200.
+- **Brutal** : expression à 5 opérandes avec `+`, `−`, `×`, `÷`, priorité standard des opérations, divisions exactes et résultat calculé automatiquement et vérifié par l’application.
 
 ### Test et actions de l'éditeur
 
@@ -102,3 +102,12 @@ Le workflow `.github/workflows/build-apk.yml` utilise :
 Il compile un APK debug dans `app/build/outputs/apk/debug/app-debug.apk` et l'ajoute aux Artifacts sous le nom `NoChoiceAlarm-debug-apk`.
 
 Configuration Android : minSdk 26, targetSdk/compileSdk 36, Java 17, ZXing Core 3.5.4.
+
+
+## Nouveautés 1.4
+
+- Sélecteur d’heure radial classique modernisé : anneau 00–11, anneau intérieur 12–23 et minutes 00–55.
+- Heure/minute affichées dans deux petites cartes arrondies avec état actif.
+- Palette active en dégradé `#00B09B` → `#96C93D`.
+- Vibration corrigée pour le mode **Tester l’alarme**.
+- Buy Me a Coffee : `https://buymeacoffee.com/elementbrome`.

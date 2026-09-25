@@ -168,7 +168,7 @@ public class RingActivity extends Activity {
         b.setTextColor(Color.WHITE);
         b.setTextSize(17);
         b.setAllCaps(false);
-        b.setBackground(Ui.rounded(Ui.PRIMARY,16,this));
+        b.setBackground(Ui.gradient(16,this));
         return b;
     }
 

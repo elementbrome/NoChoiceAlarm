@@ -34,3 +34,13 @@
 32. Tester changement manuel d'heure et de fuseau.
 33. Révoquer la caméra : le scanner doit demander à nouveau l'autorisation.
 34. Vérifier Android « Forcer l'arrêt » / Applications actives : le système reste capable d'arrêter l'application, limitation Android attendue.
+
+## v1.4 — Sélecteur d'heure et identité visuelle
+
+- Ouvrir une alarme : le rectangle **heures** est actif au départ.
+- Sélectionner une heure sur le cadran : anneau extérieur 00–11, anneau intérieur 12–23 ; la valeur sélectionnée reste blanche.
+- Relâcher le doigt après l'heure : le sélecteur passe aux minutes et le rectangle **minutes** devient actif.
+- Sélectionner une minute : les repères 00, 05, …, 55 restent visibles et une minute intermédiaire peut être choisie précisément.
+- Activer **Vibration**, puis **Tester l'alarme** : le téléphone doit vibrer en boucle jusqu'à l'arrêt du test.
+- Vérifier le dégradé #00B09B → #96C93D sur Enregistrer, +, modes/jours/difficultés actifs et actions principales du réveil.
+- Appuyer sur **Buy me a coffee** : une explication doit apparaître ; **Ouvrir la page** doit lancer `https://buymeacoffee.com/elementbrome` dans le navigateur.

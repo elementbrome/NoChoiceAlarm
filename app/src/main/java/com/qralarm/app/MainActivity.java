@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
         TextView coffee = Ui.text(this,"☕  Buy me a coffee",12,Ui.TEXT,true);
         coffee.setGravity(Gravity.CENTER);
         coffee.setPadding(Ui.dp(this,12),0,Ui.dp(this,12),0);
-        coffee.setBackground(Ui.outlined(Color.TRANSPARENT,Ui.STROKE,16,this));
+        coffee.setBackground(Ui.softGradient(16,this));
         coffee.setOnClickListener(v -> showCoffeeInfo());
         header.addView(coffee,new LinearLayout.LayoutParams(-2,Ui.dp(this,38)));
 
@@ -125,7 +125,7 @@ public class MainActivity extends Activity {
 
         TextView fab = Ui.text(this,"+",34,Color.WHITE,false);
         fab.setGravity(Gravity.CENTER);
-        fab.setBackground(Ui.rounded(Ui.PRIMARY,29,this));
+        fab.setBackground(Ui.gradient(29,this));
         fab.setElevation(Ui.dp(this,10));
         fab.setOnClickListener(v -> openEdit(-1));
         FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(Ui.dp(this,60),Ui.dp(this,60),Gravity.BOTTOM|Gravity.END);
@@ -180,8 +180,15 @@ public class MainActivity extends Activity {
     private void showCoffeeInfo() {
         new AlertDialog.Builder(this)
                 .setTitle("Buy me a coffee")
-                .setMessage("NoChoice Alarm est un projet gratuit. Si l’application vous aide, vous pourrez bientôt soutenir son développement avec un don. Le lien Buy Me a Coffee sera ajouté ici dans une prochaine version.")
-                .setPositiveButton("Compris",null)
+                .setMessage("NoChoice Alarm est et restera gratuit. Si le projet vous aide et que vous souhaitez soutenir son développement, vous pouvez m’offrir un café. Le don est entièrement facultatif.")
+                .setNegativeButton("Plus tard",null)
+                .setPositiveButton("Ouvrir la page",(d,w)-> {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/elementbrome")));
+                    } catch (Exception e) {
+                        Toast.makeText(this,"Impossible d’ouvrir le lien.",Toast.LENGTH_SHORT).show();
+                    }
+                })
                 .show();
     }
 

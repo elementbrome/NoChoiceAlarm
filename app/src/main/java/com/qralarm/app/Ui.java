@@ -18,11 +18,13 @@ public final class Ui {
     public static final int BG = Color.rgb(10,12,17);
     public static final int SURFACE = Color.rgb(22,25,33);
     public static final int SURFACE_2 = Color.rgb(31,35,45);
-    public static final int SURFACE_ACTIVE = Color.rgb(31,29,55);
+    public static final int SURFACE_ACTIVE = Color.rgb(18,34,31);
     public static final int TEXT = Color.rgb(244,246,251);
     public static final int MUTED = Color.rgb(158,164,178);
-    public static final int PRIMARY = Color.rgb(124,105,255);
-    public static final int PRIMARY_DARK = Color.rgb(94,75,224);
+    public static final int ACCENT_START = Color.rgb(0,176,155); // #00B09B
+    public static final int ACCENT_END = Color.rgb(150,201,61);   // #96C93D
+    public static final int PRIMARY = ACCENT_START;
+    public static final int PRIMARY_DARK = Color.rgb(0,132,116);
     public static final int SUCCESS = Color.rgb(63,196,126);
     public static final int DANGER = Color.rgb(241,91,105);
     public static final int STROKE = Color.rgb(52,57,70);
@@ -40,6 +42,20 @@ public final class Ui {
         d.setColor(color);
         d.setCornerRadius(dp(c, (int) radiusDp));
         return d;
+    }
+
+    public static GradientDrawable gradient(float radiusDp, Context c) {
+        return gradient(ACCENT_START, ACCENT_END, radiusDp, c);
+    }
+
+    public static GradientDrawable gradient(int start, int end, float radiusDp, Context c) {
+        GradientDrawable d = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{start, end});
+        d.setCornerRadius(dp(c, (int) radiusDp));
+        return d;
+    }
+
+    public static GradientDrawable softGradient(float radiusDp, Context c) {
+        return gradient(0x3300B09B, 0x3396C93D, radiusDp, c);
     }
 
     public static GradientDrawable outlined(int fill, int stroke, Context c) {

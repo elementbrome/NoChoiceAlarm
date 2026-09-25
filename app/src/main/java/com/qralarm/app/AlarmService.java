@@ -19,6 +19,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.util.Log;
 
 public class AlarmService extends Service {
@@ -194,10 +195,26 @@ public class AlarmService extends Service {
             vibrator = null;
             return;
         }
-        vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
-        if (vibrator != null && vibrator.hasVibrator()) {
-            long[] pattern = {0,700,350,700,350};
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern,0));
+
+        try {
+            if (Build.VERSION.SDK_INT >= 31) {
+                VibratorManager manager = (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                vibrator = manager == null ? null : manager.getDefaultVibrator();
+            } else {
+                vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            }
+
+            if (vibrator != null && vibrator.hasVibrator()) {
+                long[] pattern = {0,700,350,700,350};
+                VibrationEffect effect = VibrationEffect.createWaveform(pattern,0);
+                AudioAttributes vibrationAttributes = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build();
+                vibrator.vibrate(effect, vibrationAttributes);
+            }
+        } catch (Throwable e) {
+            Log.w("NoChoiceAlarm","Impossible d’activer la vibration",e);
         }
     }
 

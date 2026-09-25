@@ -73,7 +73,7 @@ public class AlarmListAdapter extends BaseAdapter {
         lp.topMargin = Ui.dp(context,2);
         identity.addView(label, lp);
 
-        TextView repeat = Ui.text(context, a.repeatText(), 13, a.enabled ? 0xFFB6B0F5 : Ui.MUTED, false);
+        TextView repeat = Ui.text(context, a.repeatText(), 13, a.enabled ? 0xFFB9E6A4 : Ui.MUTED, false);
         LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-2,-2);
         rp.topMargin = Ui.dp(context,3);
         identity.addView(repeat, rp);
