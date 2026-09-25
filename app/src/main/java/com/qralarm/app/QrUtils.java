@@ -25,6 +25,8 @@ import java.util.Map;
 
 public final class QrUtils {
     private static final String PREFIX = "QRAWAKE:";
+    private static final String PREFS = "qr_alarm_qr_config";
+    private static final String KEY_GLOBAL_TOKEN = "global_qr_token";
     private QrUtils() {}
 
     public static String newToken() {
@@ -34,6 +36,30 @@ public final class QrUtils {
     }
 
     public static String payload(String token) { return PREFIX + token; }
+
+    public static synchronized String globalToken(Context c) {
+        String token = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_GLOBAL_TOKEN, "");
+        if (token == null || token.isEmpty()) {
+            // Migration douce depuis la v1 : réutiliser si possible un QR déjà imprimé.
+            try {
+                for (AlarmModel old : AlarmStore.all(c)) {
+                    if (old.customQrToken != null && !old.customQrToken.isEmpty()) {
+                        token = old.customQrToken;
+                        break;
+                    }
+                }
+            } catch (Exception ignored) {}
+            if (token == null || token.isEmpty()) token = newToken();
+            c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_GLOBAL_TOKEN, token).apply();
+        }
+        return token;
+    }
+
+    public static String tokenFor(Context c, AlarmModel alarm) {
+        if (alarm == null || alarm.useGlobalQr) return globalToken(c);
+        if (alarm.customQrToken == null || alarm.customQrToken.isEmpty()) alarm.customQrToken = newToken();
+        return alarm.customQrToken;
+    }
 
     public static Bitmap bitmap(String token, int size) throws Exception {
         Map<EncodeHintType,Object> hints = new EnumMap<>(EncodeHintType.class);
@@ -52,7 +78,7 @@ public final class QrUtils {
             ContentValues v = new ContentValues();
             v.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
             v.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
-            v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/QR Alarm");
+            v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/NoChoice Alarm");
             v.put(MediaStore.Images.Media.IS_PENDING, 1);
             Uri uri = c.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
             if (uri == null) throw new IllegalStateException("Impossible de créer l’image");
@@ -63,7 +89,7 @@ public final class QrUtils {
             c.getContentResolver().update(uri, v, null, null);
             return uri;
         } else {
-            File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "QR Alarm");
+            File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "NoChoice Alarm");
             if (!dir.exists() && !dir.mkdirs()) throw new IllegalStateException("Dossier inaccessible");
             File f = new File(dir, fileName);
             try (FileOutputStream os = new FileOutputStream(f)) {

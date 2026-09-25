@@ -4,18 +4,24 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 public final class Ui {
-    public static final int BG = Color.rgb(246,247,251);
-    public static final int SURFACE = Color.WHITE;
-    public static final int TEXT = Color.rgb(21,24,33);
-    public static final int MUTED = Color.rgb(111,116,128);
-    public static final int PRIMARY = Color.rgb(91,76,240);
-    public static final int PRIMARY_DARK = Color.rgb(70,56,206);
-    public static final int DANGER = Color.rgb(211,58,74);
+    public static final int BG = Color.rgb(10,12,17);
+    public static final int SURFACE = Color.rgb(22,25,33);
+    public static final int SURFACE_2 = Color.rgb(31,35,45);
+    public static final int TEXT = Color.rgb(244,246,251);
+    public static final int MUTED = Color.rgb(158,164,178);
+    public static final int PRIMARY = Color.rgb(124,105,255);
+    public static final int PRIMARY_DARK = Color.rgb(94,75,224);
+    public static final int SUCCESS = Color.rgb(63,196,126);
+    public static final int DANGER = Color.rgb(241,91,105);
+    public static final int STROKE = Color.rgb(52,57,70);
+    public static final int WARNING_BG = Color.rgb(61,47,20);
+    public static final int WARNING_TEXT = Color.rgb(255,205,105);
 
     private Ui() {}
 
@@ -42,6 +48,16 @@ public final class Ui {
         t.setTextSize(sp);
         t.setTextColor(color);
         t.setTypeface(Typeface.create("sans", bold ? Typeface.BOLD : Typeface.NORMAL));
+        return t;
+    }
+
+    public static TextView chip(Context c, String value) {
+        TextView t = text(c, value, 12, TEXT, true);
+        t.setGravity(android.view.Gravity.CENTER);
+        t.setSingleLine(true);
+        t.setEllipsize(TextUtils.TruncateAt.END);
+        t.setPadding(dp(c,10), dp(c,7), dp(c,10), dp(c,7));
+        t.setBackground(rounded(SURFACE_2, 14, c));
         return t;
     }
 

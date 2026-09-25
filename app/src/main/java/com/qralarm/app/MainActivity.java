@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
             getPreferences(MODE_PRIVATE).edit().putBoolean("intro_shown",true).apply();
             new AlertDialog.Builder(this)
                     .setTitle("Autorisations nécessaires")
-                    .setMessage("QR Alarm a besoin de la caméra pour valider le QR code, des notifications pour afficher le réveil, et de l’autorisation plein écran afin d’afficher l’alarme sur l’écran verrouillé. Aucune donnée n’est envoyée sur Internet.")
+                    .setMessage("NoChoice Alarm a besoin de la caméra pour les réveils QR, des notifications pour afficher le réveil et de l’autorisation plein écran pour apparaître sur l’écran verrouillé. Aucune donnée n’est envoyée sur Internet.")
                     .setCancelable(false)
                     .setPositiveButton("Continuer",(d,w)->requestRuntimePermissions())
                     .show();
@@ -43,38 +43,81 @@ public class MainActivity extends Activity {
     }
 
     private void buildUi() {
-        FrameLayout root = new FrameLayout(this); root.setBackgroundColor(Ui.BG);
-        LinearLayout content = new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(0,Ui.dp(this,22),0,Ui.dp(this,92));
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Ui.BG);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(0,Ui.dp(this,24),0,Ui.dp(this,96));
+
         TextView title = Ui.text(this,"Alarmes",34,Ui.TEXT,true);
-        LinearLayout.LayoutParams titleP = new LinearLayout.LayoutParams(-1,-2); titleP.leftMargin=Ui.dp(this,22); titleP.rightMargin=Ui.dp(this,22); content.addView(title,titleP);
-        TextView subtitle = Ui.text(this,"Le QR imprimé sera nécessaire pour arrêter le réveil.",14,Ui.MUTED,false);
-        LinearLayout.LayoutParams subP = new LinearLayout.LayoutParams(-1,-2); subP.leftMargin=Ui.dp(this,22); subP.rightMargin=Ui.dp(this,22); subP.topMargin=Ui.dp(this,4); content.addView(subtitle,subP);
-        permissionWarning = Ui.text(this,"",14,0xFF9A5B00,true); permissionWarning.setPadding(Ui.dp(this,14),Ui.dp(this,10),Ui.dp(this,14),Ui.dp(this,10)); permissionWarning.setBackground(Ui.rounded(0xFFFFF2D8,12,this)); permissionWarning.setVisibility(View.GONE);
+        LinearLayout.LayoutParams titleP = new LinearLayout.LayoutParams(-1,-2);
+        titleP.leftMargin=Ui.dp(this,22); titleP.rightMargin=Ui.dp(this,22);
+        content.addView(title,titleP);
+
+        TextView subtitle = Ui.text(this,"Cliquez sur une alarme pour la modifier.",14,Ui.MUTED,false);
+        LinearLayout.LayoutParams subP = new LinearLayout.LayoutParams(-1,-2);
+        subP.leftMargin=Ui.dp(this,22); subP.rightMargin=Ui.dp(this,22); subP.topMargin=Ui.dp(this,4);
+        content.addView(subtitle,subP);
+
+        permissionWarning = Ui.text(this,"",14,Ui.WARNING_TEXT,true);
+        permissionWarning.setPadding(Ui.dp(this,14),Ui.dp(this,10),Ui.dp(this,14),Ui.dp(this,10));
+        permissionWarning.setBackground(Ui.rounded(Ui.WARNING_BG,12,this));
+        permissionWarning.setVisibility(View.GONE);
         permissionWarning.setOnClickListener(v -> {
             if (!runtimePermissionsGranted()) requestRuntimePermissions();
             else openFullScreenSettings();
         });
-        LinearLayout.LayoutParams warnP = new LinearLayout.LayoutParams(-1,-2); warnP.leftMargin=Ui.dp(this,16); warnP.rightMargin=Ui.dp(this,16); warnP.topMargin=Ui.dp(this,14); content.addView(permissionWarning,warnP);
+        LinearLayout.LayoutParams warnP = new LinearLayout.LayoutParams(-1,-2);
+        warnP.leftMargin=Ui.dp(this,16); warnP.rightMargin=Ui.dp(this,16); warnP.topMargin=Ui.dp(this,14);
+        content.addView(permissionWarning,warnP);
 
-        ListView list = new ListView(this); list.setDivider(null); list.setSelector(android.R.color.transparent); list.setClipToPadding(false); list.setPadding(0,Ui.dp(this,10),0,Ui.dp(this,10));
-        adapter = new AlarmListAdapter(this,(alarm,enabled)-> {
-            alarm.enabled=enabled; AlarmStore.save(this,alarm);
-            if (enabled) AlarmScheduler.schedule(this,alarm); else { AlarmScheduler.cancelRegular(this,alarm.id); AlarmScheduler.cancelSnooze(this,alarm.id); }
-            refresh();
+        ListView list = new ListView(this);
+        list.setDivider(null);
+        list.setSelector(android.R.color.transparent);
+        list.setClipToPadding(false);
+        list.setPadding(0,Ui.dp(this,10),0,Ui.dp(this,10));
+        list.setCacheColorHint(Color.TRANSPARENT);
+
+        adapter = new AlarmListAdapter(this,new AlarmListAdapter.Listener() {
+            @Override public void onToggle(AlarmModel alarm, boolean enabled) {
+                alarm.enabled=enabled;
+                AlarmStore.save(MainActivity.this,alarm);
+                if (enabled) AlarmScheduler.schedule(MainActivity.this,alarm);
+                else {
+                    AlarmScheduler.cancelRegular(MainActivity.this,alarm.id);
+                    AlarmScheduler.cancelSnooze(MainActivity.this,alarm.id);
+                }
+                refresh();
+            }
+
+            @Override public void onDelete(AlarmModel alarm) {
+                confirmDelete(alarm);
+            }
         });
         list.setAdapter(adapter);
         list.setOnItemClickListener((p,v,pos,id)-> openEdit(adapter.getItem(pos).id));
-        list.setOnItemLongClickListener((p,v,pos,id)-> { confirmDelete(adapter.getItem(pos)); return true; });
-        TextView empty = Ui.text(this,"Aucune alarme\nTouchez + pour créer votre premier réveil.",16,Ui.MUTED,false); empty.setGravity(Gravity.CENTER); empty.setLineSpacing(0,1.3f);
+
+        TextView empty = Ui.text(this,"Aucune alarme\nTouchez + pour créer votre premier réveil.",16,Ui.MUTED,false);
+        empty.setGravity(Gravity.CENTER);
+        empty.setLineSpacing(0,1.3f);
+
         content.addView(list,new LinearLayout.LayoutParams(-1,0,1f));
         root.addView(content,new FrameLayout.LayoutParams(-1,-1));
         root.addView(empty,new FrameLayout.LayoutParams(0,0));
         list.setEmptyView(empty);
-        FrameLayout.LayoutParams ep = new FrameLayout.LayoutParams(-1,-2,Gravity.CENTER); ep.leftMargin=Ui.dp(this,35); ep.rightMargin=Ui.dp(this,35); empty.setLayoutParams(ep);
+        FrameLayout.LayoutParams ep = new FrameLayout.LayoutParams(-1,-2,Gravity.CENTER);
+        ep.leftMargin=Ui.dp(this,35); ep.rightMargin=Ui.dp(this,35);
+        empty.setLayoutParams(ep);
 
-        TextView fab = Ui.text(this,"+",34,Color.WHITE,false); fab.setGravity(Gravity.CENTER); fab.setBackground(Ui.rounded(Ui.PRIMARY,28,this)); fab.setElevation(Ui.dp(this,8)); fab.setOnClickListener(v -> openEdit(-1));
-        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(Ui.dp(this,58),Ui.dp(this,58),Gravity.BOTTOM|Gravity.END); fp.rightMargin=Ui.dp(this,22); fp.bottomMargin=Ui.dp(this,24); root.addView(fab,fp);
+        TextView fab = Ui.text(this,"+",34,Color.WHITE,false);
+        fab.setGravity(Gravity.CENTER);
+        fab.setBackground(Ui.rounded(Ui.PRIMARY,29,this));
+        fab.setElevation(Ui.dp(this,10));
+        fab.setOnClickListener(v -> openEdit(-1));
+        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(Ui.dp(this,60),Ui.dp(this,60),Gravity.BOTTOM|Gravity.END);
+        fp.rightMargin=Ui.dp(this,22); fp.bottomMargin=Ui.dp(this,24);
+        root.addView(fab,fp);
         setContentView(root);
     }
 
@@ -97,20 +140,32 @@ public class MainActivity extends Activity {
         startActivity(ring);
     }
 
-    private void refresh() { if (adapter != null) adapter.setItems(AlarmStore.all(this)); }
+    private void refresh() {
+        if (adapter != null) adapter.setItems(AlarmStore.all(this));
+    }
 
     private void openEdit(long id) {
         if (!runtimePermissionsGranted()) {
             Toast.makeText(this,"Accordez d’abord les autorisations indispensables.",Toast.LENGTH_LONG).show();
-            requestRuntimePermissions(); return;
+            requestRuntimePermissions();
+            return;
         }
-        Intent i = new Intent(this,EditAlarmActivity.class); if (id >= 0) i.putExtra(AlarmScheduler.EXTRA_ALARM_ID,id); startActivity(i);
+        Intent i = new Intent(this,EditAlarmActivity.class);
+        if (id >= 0) i.putExtra(AlarmScheduler.EXTRA_ALARM_ID,id);
+        startActivity(i);
     }
 
     private void confirmDelete(AlarmModel a) {
-        new AlertDialog.Builder(this).setTitle("Supprimer l’alarme ?").setMessage(a.timeText() + (a.label.isEmpty()?"":" · "+a.label))
-                .setNegativeButton("Annuler",null).setPositiveButton("Supprimer",(d,w)-> {
-                    AlarmScheduler.cancelRegular(this,a.id); AlarmScheduler.cancelSnooze(this,a.id); AlarmStore.delete(this,a.id); refresh();
+        String lbl = a.label == null ? "" : a.label.trim();
+        new AlertDialog.Builder(this)
+                .setTitle("Supprimer l’alarme ?")
+                .setMessage(a.timeText() + (lbl.isEmpty()?"":" · "+lbl))
+                .setNegativeButton("Annuler",null)
+                .setPositiveButton("Supprimer",(d,w)-> {
+                    AlarmScheduler.cancelRegular(this,a.id);
+                    AlarmScheduler.cancelSnooze(this,a.id);
+                    AlarmStore.delete(this,a.id);
+                    refresh();
                 }).show();
     }
 
@@ -126,7 +181,10 @@ public class MainActivity extends Activity {
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) missing.add(Manifest.permission.CAMERA);
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) missing.add(Manifest.permission.POST_NOTIFICATIONS);
         if (Build.VERSION.SDK_INT <= 28 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) missing.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (missing.isEmpty()) { maybeRequestFullScreenAccess(); return; }
+        if (missing.isEmpty()) {
+            maybeRequestFullScreenAccess();
+            return;
+        }
         permissionsFlowStarted=true;
         requestPermissions(missing.toArray(new String[0]),REQ_PERMS);
     }
@@ -139,10 +197,11 @@ public class MainActivity extends Activity {
             if (runtimePermissionsGranted()) maybeRequestFullScreenAccess();
             else new AlertDialog.Builder(this)
                     .setTitle("Autorisation requise")
-                    .setMessage("Sans caméra et notifications, QR Alarm ne peut pas garantir le fonctionnement prévu. Vous pouvez réactiver ces autorisations dans les réglages de l’application.")
+                    .setMessage("Sans caméra et notifications, NoChoice Alarm ne peut pas garantir le fonctionnement prévu. Vous pouvez réactiver ces autorisations dans les réglages de l’application.")
                     .setNegativeButton("Fermer",null)
                     .setPositiveButton("Réglages",(d,w)-> {
-                        try { startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:"+getPackageName()))); } catch(Exception ignored) {}
+                        try { startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:"+getPackageName()))); }
+                        catch(Exception ignored) {}
                     }).show();
         }
     }
@@ -153,8 +212,9 @@ public class MainActivity extends Activity {
         if (nm.canUseFullScreenIntent()) return;
         if (getPreferences(MODE_PRIVATE).getBoolean("fsi_prompted",false)) return;
         getPreferences(MODE_PRIVATE).edit().putBoolean("fsi_prompted",true).apply();
-        new AlertDialog.Builder(this).setTitle("Affichage plein écran")
-                .setMessage("Autorisez QR Alarm à afficher une alarme en plein écran. C’est nécessaire pour que le réveil s’affiche même lorsque le téléphone est verrouillé.")
+        new AlertDialog.Builder(this)
+                .setTitle("Affichage plein écran")
+                .setMessage("Autorisez NoChoice Alarm à afficher un réveil en plein écran, même lorsque le téléphone est verrouillé.")
                 .setNegativeButton("Plus tard",null)
                 .setPositiveButton("Ouvrir les réglages",(d,w)-> openFullScreenSettings()).show();
     }
@@ -171,9 +231,11 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 34) {
             NotificationManager nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
             if (!nm.canUseFullScreenIntent()) {
-                if (sb.length()>0) sb.append("\n"); sb.append("Affichage plein écran non autorisé.");
+                if (sb.length()>0) sb.append("\n");
+                sb.append("Affichage plein écran non autorisé.");
             }
         }
-        permissionWarning.setText(sb.toString()); permissionWarning.setVisibility(sb.length()==0?View.GONE:View.VISIBLE);
+        permissionWarning.setText(sb.toString());
+        permissionWarning.setVisibility(sb.length()==0?View.GONE:View.VISIBLE);
     }
 }

@@ -6,5 +6,5 @@ if ! command -v gradle >/dev/null 2>&1; then
 fi
 : "${ANDROID_HOME:?ANDROID_HOME doit pointer vers le SDK Android}"
 gradle :app:assembleDebug
-cp app/build/outputs/apk/debug/app-debug.apk QRAlarm-debug.apk
-echo "APK: $(pwd)/QRAlarm-debug.apk"
+cp app/build/outputs/apk/debug/app-debug.apk NoChoiceAlarm-debug.apk
+echo "APK: $(pwd)/NoChoiceAlarm-debug.apk"

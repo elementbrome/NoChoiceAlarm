@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "QRAlarm"
+rootProject.name = "NoChoiceAlarm"
 include(":app")

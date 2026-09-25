@@ -11,15 +11,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
-        android:label="QR Alarm"
+        android:label="NoChoice Alarm"
         android:icon="@drawable/ic_launcher"
         android:theme="@style/Theme.QRAlarm"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="false">
 
         <activity
             android:name=".MainActivity"
