@@ -21,6 +21,7 @@ public final class MathChallenge {
         return easy();
     }
 
+    /** Easy: two 2-digit values, addition or subtraction. */
     private static MathChallenge easy() {
         int a = between(10, 99);
         int b = between(10, 99);
@@ -29,18 +30,14 @@ public final class MathChallenge {
         return new MathChallenge(hi + " − " + lo, hi - lo);
     }
 
+    /** Hard: multiplication of two 2-digit values. */
     private static MathChallenge hard() {
-        int a = between(1000, 9999);
-        int b = between(1000, 9999);
-        if (RNG.nextBoolean()) return new MathChallenge(a + " + " + b, a + b);
-        int hi = Math.max(a,b), lo = Math.min(a,b);
-        return new MathChallenge(hi + " − " + lo, hi - lo);
+        int a = between(10, 99);
+        int b = between(10, 99);
+        return new MathChallenge(a + " × " + b, a * b);
     }
 
-    /**
-     * Cinq opérandes, quatre opérateurs, avec priorité standard de × et ÷.
-     * Les divisions sont toujours exactes et le résultat final est entre 1 et 200.
-     */
+    /** Five operands, standard precedence, exact divisions and final result 1..200. */
     private static MathChallenge brutal() {
         for (int attempt=0; attempt<20_000; attempt++) {
             int[] nums = new int[5];
@@ -62,7 +59,6 @@ public final class MathChallenge {
             }
             return new MathChallenge(e.toString(), value);
         }
-        // Repli garanti si le générateur aléatoire n'a rien trouvé dans la limite.
         return new MathChallenge("18 ÷ 3 × 4 + 9 − 11", 22);
     }
 

@@ -40,6 +40,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Ui.enableImmersive(this);
         expectedToken = getIntent().getStringExtra(EXTRA_QR_TOKEN);
         if (expectedToken == null || expectedToken.isEmpty()) {
             long id = getIntent().getLongExtra(AlarmScheduler.EXTRA_ALARM_ID,-1);
@@ -172,4 +173,9 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
             }
         }
     }
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) Ui.enableImmersive(this);
+    }
+
 }

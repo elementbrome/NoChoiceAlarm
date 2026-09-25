@@ -30,6 +30,7 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Ui.hideStatusBar(this);
         buildUi();
         if (!getPreferences(MODE_PRIVATE).getBoolean("intro_shown",false)) {
             getPreferences(MODE_PRIVATE).edit().putBoolean("intro_shown",true).apply();
@@ -119,6 +120,7 @@ public class MainActivity extends Activity {
         fp.rightMargin=Ui.dp(this,22); fp.bottomMargin=Ui.dp(this,24);
         root.addView(fab,fp);
         setContentView(root);
+        Ui.applySystemBarInsets(root,0,0,0,0);
     }
 
     @Override protected void onResume() {
@@ -127,7 +129,7 @@ public class MainActivity extends Activity {
         refresh();
         updatePermissionWarning();
         if (getPreferences(MODE_PRIVATE).getBoolean("intro_shown",false) && !permissionsFlowStarted) {
-            if (runtimePermissionsGranted()) maybeRequestFullScreenAccess();
+            if (runtimePermissionsGranted()) { AlarmStatusNotifier.update(this); maybeRequestFullScreenAccess(); }
         }
     }
 
@@ -142,6 +144,7 @@ public class MainActivity extends Activity {
 
     private void refresh() {
         if (adapter != null) adapter.setItems(AlarmStore.all(this));
+        AlarmStatusNotifier.update(this);
     }
 
     private void openEdit(long id) {
@@ -194,7 +197,7 @@ public class MainActivity extends Activity {
         permissionsFlowStarted=false;
         updatePermissionWarning();
         if (requestCode==REQ_PERMS) {
-            if (runtimePermissionsGranted()) maybeRequestFullScreenAccess();
+            if (runtimePermissionsGranted()) { AlarmStatusNotifier.update(this); maybeRequestFullScreenAccess(); }
             else new AlertDialog.Builder(this)
                     .setTitle("Autorisation requise")
                     .setMessage("Sans caméra et notifications, NoChoice Alarm ne peut pas garantir le fonctionnement prévu. Vous pouvez réactiver ces autorisations dans les réglages de l’application.")
@@ -238,4 +241,9 @@ public class MainActivity extends Activity {
         permissionWarning.setText(sb.toString());
         permissionWarning.setVisibility(sb.length()==0?View.GONE:View.VISIBLE);
     }
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) Ui.hideStatusBar(this);
+    }
+
 }

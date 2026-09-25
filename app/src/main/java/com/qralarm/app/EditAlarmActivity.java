@@ -6,9 +6,14 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.OpenableColumns;
 import android.text.InputType;
 import android.view.Gravity;
@@ -22,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -48,6 +54,7 @@ public class EditAlarmActivity extends Activity {
     private SeekBar volumeSeek;
     private TextView volumeValue;
     private Spinner rampSpinner;
+    private Switch vibrationSwitch;
 
     private TextView qrModeButton;
     private TextView mathModeButton;
@@ -56,13 +63,19 @@ public class EditAlarmActivity extends Activity {
     private TextView qrGlobalButton;
     private TextView qrIndividualButton;
     private final TextView[] difficultyButtons = new TextView[3];
+    private TextView difficultyDescription;
     private ImageView qrImage;
     private Button qrSaveButton;
     private Bitmap qrBitmap;
     private String shownQrToken = "";
 
+    private MediaPlayer previewPlayer;
+    private final Handler previewHandler = new Handler(Looper.getMainLooper());
+    private final Runnable stopPreviewRunnable = this::stopVolumePreview;
+
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Ui.hideStatusBar(this);
         long id = getIntent().getLongExtra(AlarmScheduler.EXTRA_ALARM_ID,-1);
         AlarmModel existing = id < 0 ? null : AlarmStore.get(this,id);
         isNew = existing == null;
@@ -79,6 +92,7 @@ public class EditAlarmActivity extends Activity {
             alarm.enabled=true;
             alarm.useGlobalQr=true;
             alarm.wakeModeMask=AlarmModel.MODE_QR;
+            alarm.vibrationEnabled=false;
         }
 
         qrSaveRequired = isNew && alarm.usesQr();
@@ -92,6 +106,7 @@ public class EditAlarmActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(Ui.BG);
+        scroll.setClipToPadding(false);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -103,14 +118,9 @@ public class EditAlarmActivity extends Activity {
         TextView back = Ui.text(this,"‹",40,Ui.TEXT,false);
         back.setGravity(Gravity.CENTER);
         back.setOnClickListener(v->finish());
-        top.addView(back,new LinearLayout.LayoutParams(Ui.dp(this,48),Ui.dp(this,48)));
-        TextView title = Ui.text(this,isNew?"Nouvelle alarme":"Modifier l’alarme",24,Ui.TEXT,true);
+        top.addView(back,new LinearLayout.LayoutParams(Ui.dp(this,48),Ui.dp(this,52)));
+        TextView title = Ui.text(this,isNew?"Nouvelle alarme":"Modifier l’alarme",25,Ui.TEXT,true);
         top.addView(title,new LinearLayout.LayoutParams(0,-2,1f));
-        TextView save = Ui.text(this,"Enregistrer",15,Ui.PRIMARY,true);
-        save.setGravity(Gravity.CENTER);
-        save.setPadding(Ui.dp(this,10),0,Ui.dp(this,4),0);
-        save.setOnClickListener(v->saveAlarm());
-        top.addView(save,new LinearLayout.LayoutParams(-2,Ui.dp(this,48)));
         root.addView(top,new LinearLayout.LayoutParams(-1,-2));
 
         timePicker = new TimePicker(this);
@@ -120,12 +130,12 @@ public class EditAlarmActivity extends Activity {
         LinearLayout timeCard = card();
         timeCard.setGravity(Gravity.CENTER);
         timeCard.addView(timePicker,new LinearLayout.LayoutParams(-1,-2));
-        addCard(root,timeCard,12);
+        addCard(root,timeCard,14);
 
         section(root,"Nom de l’alarme");
         label = new EditText(this);
         label.setText(alarm.label);
-        label.setHint("Facultatif");
+        label.setHint("e.g. Running");
         label.setTextSize(17);
         label.setTextColor(Ui.TEXT);
         label.setHintTextColor(0xFF777C89);
@@ -168,18 +178,31 @@ public class EditAlarmActivity extends Activity {
         volumeValue = Ui.text(this,alarm.volumePercent+"%",14,Ui.PRIMARY,true);
         volumeTop.addView(volumeValue);
         volumeCard.addView(volumeTop,new LinearLayout.LayoutParams(-1,-2));
+
         volumeSeek = new SeekBar(this);
         volumeSeek.setMax(100);
         volumeSeek.setProgress(alarm.volumePercent);
         volumeSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar seekBar,int progress,boolean fromUser) { volumeValue.setText(progress+"%"); }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            @Override public void onProgressChanged(SeekBar seekBar,int progress,boolean fromUser) {
+                volumeValue.setText(progress+"%");
+                if (fromUser) {
+                    startVolumePreview();
+                    updatePreviewVolume(progress);
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {
+                startVolumePreview();
+                updatePreviewVolume(seekBar.getProgress());
+            }
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {
+                previewHandler.removeCallbacks(stopPreviewRunnable);
+                previewHandler.postDelayed(stopPreviewRunnable,900);
+            }
         });
         LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(-1,-2);
         vp.topMargin=Ui.dp(this,8);
         volumeCard.addView(volumeSeek,vp);
-        TextView volumeHint=Ui.text(this,"Ce réglage ajuste le volume de lecture dans l’app, sans modifier le volume système du téléphone.",12,Ui.MUTED,false);
+        TextView volumeHint=Ui.text(this,"Faites glisser le curseur : la sonnerie est pré-écoutée au volume choisi. Le volume système du téléphone reste inchangé.",12,Ui.MUTED,false);
         LinearLayout.LayoutParams vhp=new LinearLayout.LayoutParams(-1,-2); vhp.topMargin=Ui.dp(this,6);
         volumeCard.addView(volumeHint,vhp);
         addCard(root,volumeCard,0);
@@ -189,17 +212,34 @@ public class EditAlarmActivity extends Activity {
         rampSpinner.setSelection(rampIndex(alarm.volumeRampSeconds));
         root.addView(rampSpinner,new LinearLayout.LayoutParams(-1,Ui.dp(this,56)));
 
+        section(root,"Vibration");
+        LinearLayout vibrationCard = new LinearLayout(this);
+        vibrationCard.setGravity(Gravity.CENTER_VERTICAL);
+        vibrationCard.setPadding(Ui.dp(this,16),Ui.dp(this,10),Ui.dp(this,10),Ui.dp(this,10));
+        vibrationCard.setBackground(Ui.rounded(Ui.SURFACE,16,this));
+        LinearLayout vibrationText = new LinearLayout(this);
+        vibrationText.setOrientation(LinearLayout.VERTICAL);
+        vibrationText.addView(Ui.text(this,"Vibrer pendant l’alarme",16,Ui.TEXT,true));
+        TextView vibHint=Ui.text(this,"Désactivé par défaut",12,Ui.MUTED,false);
+        LinearLayout.LayoutParams vh=new LinearLayout.LayoutParams(-2,-2); vh.topMargin=Ui.dp(this,2);
+        vibrationText.addView(vibHint,vh);
+        vibrationCard.addView(vibrationText,new LinearLayout.LayoutParams(0,-2,1f));
+        vibrationSwitch = new Switch(this);
+        vibrationSwitch.setChecked(alarm.vibrationEnabled);
+        vibrationCard.addView(vibrationSwitch,new LinearLayout.LayoutParams(-2,-2));
+        root.addView(vibrationCard,new LinearLayout.LayoutParams(-1,Ui.dp(this,68)));
+
         section(root,"Mode de réveil");
-        TextView modeHelp = Ui.text(this,"Vous pouvez activer QR Code, Math, ou les deux. Si les deux sont actifs, le QR est demandé en premier.",13,Ui.MUTED,false);
+        TextView modeHelp = Ui.text(this,"Activez QR Code, Math, ou les deux. Si les deux sont actifs, le QR est demandé en premier.",13,Ui.MUTED,false);
         root.addView(modeHelp,new LinearLayout.LayoutParams(-1,-2));
 
         LinearLayout modeRow = new LinearLayout(this);
         modeRow.setOrientation(LinearLayout.HORIZONTAL);
         modeRow.setGravity(Gravity.CENTER);
-        qrModeButton = selectable("QR Code", () -> toggleMode(AlarmModel.MODE_QR));
-        mathModeButton = selectable("Math", () -> toggleMode(AlarmModel.MODE_MATH));
-        LinearLayout.LayoutParams m1 = new LinearLayout.LayoutParams(0,Ui.dp(this,50),1f);
-        LinearLayout.LayoutParams m2 = new LinearLayout.LayoutParams(0,Ui.dp(this,50),1f); m2.leftMargin=Ui.dp(this,8);
+        qrModeButton = selectableWithIcon("QR Code", R.drawable.ic_qr_mode, () -> toggleMode(AlarmModel.MODE_QR));
+        mathModeButton = selectableWithIcon("Math", R.drawable.ic_math_mode, () -> toggleMode(AlarmModel.MODE_MATH));
+        LinearLayout.LayoutParams m1 = new LinearLayout.LayoutParams(0,Ui.dp(this,52),1f);
+        LinearLayout.LayoutParams m2 = new LinearLayout.LayoutParams(0,Ui.dp(this,52),1f); m2.leftMargin=Ui.dp(this,8);
         modeRow.addView(qrModeButton,m1); modeRow.addView(mathModeButton,m2);
         LinearLayout.LayoutParams mrp=new LinearLayout.LayoutParams(-1,-2); mrp.topMargin=Ui.dp(this,10);
         root.addView(modeRow,mrp);
@@ -219,14 +259,21 @@ public class EditAlarmActivity extends Activity {
         snoozeSpinner.setSelection(snoozeIndex(alarm.snoozeMinutes));
         root.addView(snoozeSpinner,new LinearLayout.LayoutParams(-1,Ui.dp(this,56)));
 
-        Button test = button("Tester l’alarme",Color.WHITE,Ui.PRIMARY);
+        Button test = outlinedButton("Tester l’alarme");
         test.setOnClickListener(v->testAlarm());
         LinearLayout.LayoutParams testP=new LinearLayout.LayoutParams(-1,Ui.dp(this,58));
-        testP.topMargin=Ui.dp(this,28);
+        testP.topMargin=Ui.dp(this,32);
         root.addView(test,testP);
 
+        Button save = button("Enregistrer",Color.WHITE,Ui.PRIMARY);
+        save.setTextSize(17);
+        save.setOnClickListener(v->saveAlarm());
+        LinearLayout.LayoutParams saveP=new LinearLayout.LayoutParams(-1,Ui.dp(this,60));
+        saveP.topMargin=Ui.dp(this,10);
+        root.addView(save,saveP);
+
         TextView testHint=Ui.text(this,"En mode test, un bouton « Arrêter le test » reste disponible même sans QR imprimé.",13,Ui.MUTED,false);
-        LinearLayout.LayoutParams thp=new LinearLayout.LayoutParams(-1,-2); thp.topMargin=Ui.dp(this,8);
+        LinearLayout.LayoutParams thp=new LinearLayout.LayoutParams(-1,-2); thp.topMargin=Ui.dp(this,10);
         root.addView(testHint,thp);
 
         TextView security=Ui.text(this,"Sécurité : les QR contiennent uniquement un jeton aléatoire local. Les alarmes et réglages restent sur l’appareil.",13,Ui.MUTED,false);
@@ -236,6 +283,7 @@ public class EditAlarmActivity extends Activity {
 
         refreshModeUi();
         setContentView(scroll);
+        Ui.applySystemBarInsets(scroll,0,0,0,0);
     }
 
     private void buildMathSection(LinearLayout parent) {
@@ -253,9 +301,10 @@ public class EditAlarmActivity extends Activity {
             row.addView(b,p);
         }
         parent.addView(row,new LinearLayout.LayoutParams(-1,-2));
-        TextView hint=Ui.text(this,"Easy : 2 nombres à 2 chiffres. Hard : 2 nombres à 4 chiffres. Brutal : 5 nombres avec +, −, ×, ÷ et priorité des opérations ; résultat entre 1 et 200.",12,Ui.MUTED,false);
+        difficultyDescription=Ui.text(this,"",12,Ui.MUTED,false);
+        difficultyDescription.setLineSpacing(0,1.15f);
         LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(-1,-2); hp.topMargin=Ui.dp(this,8);
-        parent.addView(hint,hp);
+        parent.addView(difficultyDescription,hp);
     }
 
     private void buildQrSection(LinearLayout parent) {
@@ -324,11 +373,24 @@ public class EditAlarmActivity extends Activity {
         return b;
     }
 
+    private Button outlinedButton(String text) {
+        Button b=button(text,Ui.TEXT,Color.TRANSPARENT);
+        b.setBackground(Ui.outlined(Color.TRANSPARENT,Ui.PRIMARY,16,this));
+        return b;
+    }
+
     private TextView selectable(String text,Runnable click) {
         TextView v=Ui.text(this,text,14,Ui.TEXT,true);
         v.setGravity(Gravity.CENTER);
         v.setBackground(Ui.rounded(Ui.SURFACE,15,this));
         v.setOnClickListener(x->click.run());
+        return v;
+    }
+
+    private TextView selectableWithIcon(String text,int icon,Runnable click) {
+        TextView v=selectable(text,click);
+        v.setCompoundDrawablesWithIntrinsicBounds(icon,0,0,0);
+        v.setCompoundDrawablePadding(Ui.dp(this,8));
         return v;
     }
 
@@ -402,6 +464,15 @@ public class EditAlarmActivity extends Activity {
         styleSelectable(difficultyButtons[0],AlarmModel.MATH_EASY.equals(alarm.mathDifficulty));
         styleSelectable(difficultyButtons[1],AlarmModel.MATH_HARD.equals(alarm.mathDifficulty));
         styleSelectable(difficultyButtons[2],AlarmModel.MATH_BRUTAL.equals(alarm.mathDifficulty));
+        if (difficultyDescription != null) {
+            if (AlarmModel.MATH_HARD.equals(alarm.mathDifficulty)) {
+                difficultyDescription.setText("Hard : multiplication avec 2 nombres à 2 chiffres.");
+            } else if (AlarmModel.MATH_BRUTAL.equals(alarm.mathDifficulty)) {
+                difficultyDescription.setText("Brutal : 5 nombres avec +, −, ×, ÷ et priorité des opérations ; résultat final entre 1 et 200.");
+            } else {
+                difficultyDescription.setText("Easy : addition ou soustraction avec 2 nombres à 2 chiffres.");
+            }
+        }
     }
 
     private void updateQrScopeStyles() {
@@ -421,6 +492,7 @@ public class EditAlarmActivity extends Activity {
     }
 
     private void chooseSound() {
+        stopVolumePreview();
         String[] choices={"Par défaut (alarme du téléphone)","Choisir un son dans mes fichiers"};
         new AlertDialog.Builder(this).setTitle("Son de l’alarme").setItems(choices,(d,which)-> {
             if(which==0){
@@ -460,6 +532,43 @@ public class EditAlarmActivity extends Activity {
         soundButton.setText(soundUri==null||soundUri.isEmpty()?"Par défaut · System alarm":soundName);
     }
 
+    private void startVolumePreview() {
+        previewHandler.removeCallbacks(stopPreviewRunnable);
+        if (previewPlayer != null) return;
+        if (AlarmService.getActiveAlarmId(this) >= 0) return;
+        try {
+            Uri uri = soundUri == null || soundUri.isEmpty() ? RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) : Uri.parse(soundUri);
+            if (uri == null) uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            previewPlayer = new MediaPlayer();
+            previewPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build());
+            previewPlayer.setDataSource(this,uri);
+            previewPlayer.setLooping(true);
+            previewPlayer.prepare();
+            updatePreviewVolume(volumeSeek.getProgress());
+            previewPlayer.start();
+        } catch(Exception e) {
+            stopVolumePreview();
+        }
+    }
+
+    private void updatePreviewVolume(int percent) {
+        if (previewPlayer == null) return;
+        float v=Math.max(0f,Math.min(1f,percent/100f));
+        try { previewPlayer.setVolume(v,v); } catch(Exception ignored) {}
+    }
+
+    private void stopVolumePreview() {
+        previewHandler.removeCallbacks(stopPreviewRunnable);
+        if (previewPlayer != null) {
+            try { previewPlayer.stop(); } catch(Exception ignored) {}
+            try { previewPlayer.release(); } catch(Exception ignored) {}
+            previewPlayer=null;
+        }
+    }
+
     private void downloadQr() {
         try {
             collectForm(false);
@@ -490,11 +599,13 @@ public class EditAlarmActivity extends Activity {
         alarm.snoozeMinutes=snoozeValue();
         alarm.volumePercent=volumeSeek.getProgress();
         alarm.volumeRampSeconds=rampValue();
+        alarm.vibrationEnabled=vibrationSwitch.isChecked();
         if(!alarm.useGlobalQr && (alarm.customQrToken==null||alarm.customQrToken.isEmpty())) alarm.customQrToken=QrUtils.newToken();
-        if(forceEnabled) alarm.enabled=true;
+        if(forceEnabled && isNew) alarm.enabled=true;
     }
 
     private void testAlarm() {
+        stopVolumePreview();
         collectForm(false);
         if(AlarmService.getActiveAlarmId(this)>=0) {
             Toast.makeText(this,"Impossible de lancer un test pendant qu’une vraie alarme sonne.",Toast.LENGTH_LONG).show();
@@ -520,6 +631,7 @@ public class EditAlarmActivity extends Activity {
     }
 
     private void saveAlarm() {
+        stopVolumePreview();
         collectForm(true);
         if(alarm.usesQr() && qrSaveRequired) {
             new AlertDialog.Builder(this)
@@ -531,7 +643,18 @@ public class EditAlarmActivity extends Activity {
         }
         AlarmStore.save(this,alarm);
         AlarmScheduler.schedule(this,alarm);
+        AlarmStatusNotifier.update(this);
         Toast.makeText(this,"Alarme enregistrée pour "+alarm.timeText(),Toast.LENGTH_SHORT).show();
         finish();
     }
+
+    @Override protected void onPause() {
+        stopVolumePreview();
+        super.onPause();
+    }
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) Ui.hideStatusBar(this);
+    }
+
 }

@@ -44,8 +44,10 @@ public class AlarmListAdapter extends BaseAdapter {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(Ui.dp(context,18), Ui.dp(context,16), Ui.dp(context,14), Ui.dp(context,14));
-        card.setBackground(Ui.rounded(Ui.SURFACE,20,context));
-        card.setElevation(Ui.dp(context,2));
+        card.setBackground(a.enabled
+                ? Ui.outlined(Ui.SURFACE_ACTIVE, Ui.PRIMARY, 20, context)
+                : Ui.rounded(Ui.SURFACE,20,context));
+        card.setElevation(Ui.dp(context,a.enabled ? 5 : 2));
 
         LinearLayout top = new LinearLayout(context);
         top.setOrientation(LinearLayout.HORIZONTAL);
@@ -54,8 +56,16 @@ public class AlarmListAdapter extends BaseAdapter {
         LinearLayout identity = new LinearLayout(context);
         identity.setOrientation(LinearLayout.VERTICAL);
 
+        if (a.enabled) {
+            TextView active = Ui.text(context,"ACTIVE",11,Ui.PRIMARY,true);
+            active.setLetterSpacing(.12f);
+            identity.addView(active,new LinearLayout.LayoutParams(-2,-2));
+        }
+
         TextView time = Ui.text(context, a.timeText(), 34, a.enabled ? Ui.TEXT : 0xFF777C89, true);
-        identity.addView(time);
+        LinearLayout.LayoutParams timeP = new LinearLayout.LayoutParams(-2,-2);
+        timeP.topMargin = a.enabled ? Ui.dp(context,2) : 0;
+        identity.addView(time,timeP);
 
         String labelText = a.label == null || a.label.trim().isEmpty() ? "Alarme" : a.label.trim();
         TextView label = Ui.text(context, labelText, 16, a.enabled ? Ui.TEXT : 0xFF777C89, true);
@@ -63,7 +73,7 @@ public class AlarmListAdapter extends BaseAdapter {
         lp.topMargin = Ui.dp(context,2);
         identity.addView(label, lp);
 
-        TextView repeat = Ui.text(context, a.repeatText(), 13, Ui.MUTED, false);
+        TextView repeat = Ui.text(context, a.repeatText(), 13, a.enabled ? 0xFFB6B0F5 : Ui.MUTED, false);
         LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-2,-2);
         rp.topMargin = Ui.dp(context,3);
         identity.addView(repeat, rp);
@@ -96,6 +106,7 @@ public class AlarmListAdapter extends BaseAdapter {
         String[] texts = {a.modeChipText(), a.snoozeChipText(), a.soundChipText()};
         for (int i=0;i<texts.length;i++) {
             TextView chip = Ui.chip(context,texts[i]);
+            if (!a.enabled) chip.setTextColor(Ui.MUTED);
             LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0,Ui.dp(context,34),1f);
             if (i>0) cp.leftMargin = Ui.dp(context,7);
             chips.addView(chip,cp);

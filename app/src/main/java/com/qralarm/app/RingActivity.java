@@ -32,6 +32,7 @@ public class RingActivity extends Activity {
         setShowWhenLocked(true);
         setTurnScreenOn(true);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
+        Ui.enableImmersive(this);
 
         alarmId = getIntent().getLongExtra(AlarmScheduler.EXTRA_ALARM_ID,-1);
         testMode = getIntent().getBooleanExtra(AlarmService.EXTRA_TEST,false);
@@ -241,4 +242,9 @@ public class RingActivity extends Activity {
     @Override public void onBackPressed() {
         // Intentionnel : retour ne contourne ni un vrai réveil ni le test. Le test possède son propre bouton d’arrêt.
     }
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) Ui.enableImmersive(this);
+    }
+
 }

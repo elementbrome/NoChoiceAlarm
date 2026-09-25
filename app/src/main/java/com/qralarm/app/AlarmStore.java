@@ -1,10 +1,8 @@
 package com.qralarm.app;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import org.json.JSONArray;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public final class AlarmStore {
@@ -20,7 +18,17 @@ public final class AlarmStore {
             JSONArray arr = new JSONArray(raw);
             for (int i = 0; i < arr.length(); i++) out.add(AlarmModel.fromJson(arr.getJSONObject(i)));
         } catch (Exception ignored) {}
-        out.sort(Comparator.comparingInt((AlarmModel a) -> a.hour).thenComparingInt(a -> a.minute));
+
+        final long now = System.currentTimeMillis();
+        out.sort((a,b) -> {
+            if (a.enabled != b.enabled) return a.enabled ? -1 : 1;
+            if (a.enabled) {
+                int next = Long.compare(AlarmScheduler.nextTrigger(a, now), AlarmScheduler.nextTrigger(b, now));
+                if (next != 0) return next;
+            }
+            int h = Integer.compare(a.hour, b.hour);
+            return h != 0 ? h : Integer.compare(a.minute, b.minute);
+        });
         return out;
     }
 
@@ -55,5 +63,6 @@ public final class AlarmStore {
             try { arr.put(a.toJson()); } catch (Exception ignored) {}
         }
         c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, arr.toString()).apply();
+        AlarmStatusNotifier.update(c);
     }
 }

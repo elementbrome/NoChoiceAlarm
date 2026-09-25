@@ -79,7 +79,7 @@ public class AlarmService extends Service {
 
         startForeground(NOTIFICATION_ID, buildNotification(alarm,test,json));
         startSound(alarm);
-        startVibration();
+        startVibration(alarm);
         return test ? START_NOT_STICKY : START_STICKY;
     }
 
@@ -181,7 +181,12 @@ public class AlarmService extends Service {
         volumeHandler.post(volumeRamp);
     }
 
-    private void startVibration() {
+    private void startVibration(AlarmModel alarm) {
+        if (!alarm.vibrationEnabled) {
+            if (vibrator != null) vibrator.cancel();
+            vibrator = null;
+            return;
+        }
         vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         if (vibrator != null && vibrator.hasVibrator()) {
             long[] pattern = {0,700,350,700,350};

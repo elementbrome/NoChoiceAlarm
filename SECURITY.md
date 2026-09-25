@@ -9,6 +9,8 @@
 - **Trafic clair désactivé** : `android:usesCleartextTraffic="false"`.
 - **Composants internes non exportés** : activités de réveil/scanner, service et receivers ne sont pas accessibles arbitrairement par d'autres applications.
 - **Notification de réveil** : service au premier plan, catégorie `ALARM`, `setOngoing(true)` et full-screen intent pour une vraie alarme.
+- **Notification des alarmes actives** : canal silencieux séparé, visibilité `PRIVATE` sur l’écran verrouillé et aucune donnée envoyée à un serveur.
+- **Vibration** : désactivée par défaut et uniquement activée sur choix explicite de l’utilisateur.
 - **Mode test distinct** : ne crée pas d'alarme planifiée et expose volontairement un bouton d'arrêt manuel.
 
 ## Risques à connaître

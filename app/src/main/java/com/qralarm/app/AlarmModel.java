@@ -17,7 +17,7 @@ public class AlarmModel {
     public int hour;
     public int minute;
     public String label = "";
-    public int repeatMask = 0; // bit 0 = lundi ... bit 6 = dimanche
+    public int repeatMask = 0;
     public String soundUri = "";
     public String soundName = "System alarm";
     public int snoozeMinutes = 0;
@@ -29,6 +29,7 @@ public class AlarmModel {
     public String customQrToken = "";
     public int volumePercent = 100;
     public int volumeRampSeconds = 0;
+    public boolean vibrationEnabled = false;
 
     public JSONObject toJson() throws JSONException {
         JSONObject o = new JSONObject();
@@ -47,6 +48,7 @@ public class AlarmModel {
         o.put("customQrToken", customQrToken == null ? "" : customQrToken);
         o.put("volumePercent", volumePercent);
         o.put("volumeRampSeconds", volumeRampSeconds);
+        o.put("vibrationEnabled", vibrationEnabled);
         return o;
     }
 
@@ -65,10 +67,11 @@ public class AlarmModel {
         if ((a.wakeModeMask & (MODE_QR | MODE_MATH)) == 0) a.wakeModeMask = MODE_QR;
         a.mathDifficulty = o.optString("mathDifficulty", MATH_EASY);
         a.useGlobalQr = o.optBoolean("useGlobalQr", true);
-        // Migration depuis la première version, qui stockait qrToken par alarme.
         a.customQrToken = o.optString("customQrToken", o.optString("qrToken", ""));
         a.volumePercent = clamp(o.optInt("volumePercent", 100), 0, 100);
         a.volumeRampSeconds = normalizeRamp(o.optInt("volumeRampSeconds", 0));
+        // v1.2 migration: vibration is OFF unless the user explicitly enables it.
+        a.vibrationEnabled = o.optBoolean("vibrationEnabled", false);
         return a;
     }
 
