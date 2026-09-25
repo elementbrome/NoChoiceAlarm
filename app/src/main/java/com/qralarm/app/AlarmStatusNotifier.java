@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,7 +25,17 @@ public final class AlarmStatusNotifier {
     private AlarmStatusNotifier() {}
 
     public static void update(Context context) {
+        try {
+            updateInternal(context);
+        } catch (RuntimeException e) {
+            // A status notification is helpful but must never be able to crash the alarm app.
+            Log.w("NoChoiceAlarm", "Unable to update scheduled-alarm notification", e);
+        }
+    }
+
+    private static void updateInternal(Context context) {
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm == null) return;
         createChannel(nm);
 
         if (Build.VERSION.SDK_INT >= 33

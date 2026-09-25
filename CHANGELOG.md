@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1 — 2026-09-25
+
+- Correctif de crash au lancement sur certains appareils / états de mise à jour.
+- Gestion des barres système rendue défensive et déclenchée après l'attachement de la vue.
+- Une erreur de notification de résumé ne peut plus fermer l'application.
+- Récupération d'une ancienne alarme active protégée contre les erreurs de démarrage de service.
+- Service de sonnerie déclaré comme `mediaPlayback` avec `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, type correspondant à sa fonction audio.
+- Version code portée à 4 (`1.2.1`).
+
 ## 1.2.0 — 2026-09-25
 
 - Workflow GitHub Actions passé de Basic Caching à Enhanced Caching.

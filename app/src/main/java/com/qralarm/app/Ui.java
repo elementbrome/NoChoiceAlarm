@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.widget.TextView;
+import android.util.Log;
 
 public final class Ui {
     public static final int BG = Color.rgb(10,12,17);
@@ -70,61 +71,78 @@ public final class Ui {
         return t;
     }
 
-    /** Keeps normal screens clear of Android's edge-to-edge status/navigation bars. */
+    /** Applies system-bar insets defensively so a vendor-specific WindowInsets issue cannot crash the app. */
     public static void applySystemBarInsets(View root, int baseLeftDp, int baseTopDp, int baseRightDp, int baseBottomDp) {
         final Context c = root.getContext();
         final int baseLeft = dp(c, baseLeftDp);
         final int baseTop = dp(c, baseTopDp);
         final int baseRight = dp(c, baseRightDp);
         final int baseBottom = dp(c, baseBottomDp);
-        root.setOnApplyWindowInsetsListener((v, insets) -> {
-            int l, t, r, b;
-            if (Build.VERSION.SDK_INT >= 30) {
-                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
-                l = bars.left; t = bars.top; r = bars.right; b = bars.bottom;
-            } else {
-                l = insets.getSystemWindowInsetLeft();
-                t = insets.getSystemWindowInsetTop();
-                r = insets.getSystemWindowInsetRight();
-                b = insets.getSystemWindowInsetBottom();
-            }
-            v.setPadding(baseLeft + l, baseTop + t, baseRight + r, baseBottom + b);
-            return insets;
-        });
-        root.requestApplyInsets();
+        try {
+            root.setOnApplyWindowInsetsListener((v, insets) -> {
+                try {
+                    int l, t, r, b;
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                        l = bars.left; t = bars.top; r = bars.right; b = bars.bottom;
+                    } else {
+                        l = insets.getSystemWindowInsetLeft();
+                        t = insets.getSystemWindowInsetTop();
+                        r = insets.getSystemWindowInsetRight();
+                        b = insets.getSystemWindowInsetBottom();
+                    }
+                    v.setPadding(baseLeft + l, baseTop + t, baseRight + r, baseBottom + b);
+                } catch (Throwable e) {
+                    Log.w("NoChoiceAlarm", "Unable to apply system bar insets", e);
+                    v.setPadding(baseLeft, baseTop, baseRight, baseBottom);
+                }
+                return insets;
+            });
+            root.requestApplyInsets();
+        } catch (Throwable e) {
+            Log.w("NoChoiceAlarm", "Unable to register system bar insets", e);
+            root.setPadding(baseLeft, baseTop, baseRight, baseBottom);
+        }
     }
 
-
-    /** Hides only the top status bar on normal app screens; it can still be revealed by a system gesture. */
+    /** Hides only the top status bar. Failure is non-fatal on customized Android builds. */
     public static void hideStatusBar(Activity activity) {
-        if (Build.VERSION.SDK_INT >= 30) {
-            WindowInsetsController controller = activity.getWindow().getInsetsController();
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars());
-                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                WindowInsetsController controller = activity.getWindow().getInsetsController();
+                if (controller != null) {
+                    controller.hide(WindowInsets.Type.statusBars());
+                    controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                }
+            } else {
+                activity.getWindow().getDecorView().setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             }
-        } else {
-            activity.getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        } catch (Throwable e) {
+            Log.w("NoChoiceAlarm", "Unable to hide status bar", e);
         }
     }
 
     /** Ringing/scanner screens are intentionally immersive; system bars remain reachable by swipe. */
     public static void enableImmersive(Activity activity) {
-        if (Build.VERSION.SDK_INT >= 30) {
-            WindowInsetsController controller = activity.getWindow().getInsetsController();
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                WindowInsetsController controller = activity.getWindow().getInsetsController();
+                if (controller != null) {
+                    controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                    controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                }
+            } else {
+                activity.getWindow().getDecorView().setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             }
-        } else {
-            activity.getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        } catch (Throwable e) {
+            Log.w("NoChoiceAlarm", "Unable to enter immersive mode", e);
         }
     }
 

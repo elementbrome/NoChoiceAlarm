@@ -7,10 +7,12 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -77,7 +79,12 @@ public class AlarmService extends Service {
             getSharedPreferences(ACTIVE_PREF,MODE_PRIVATE).edit().putLong("id",alarm.id).apply();
         }
 
-        startForeground(NOTIFICATION_ID, buildNotification(alarm,test,json));
+        Notification notification = buildNotification(alarm,test,json);
+        if (Build.VERSION.SDK_INT >= 29) {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+        } else {
+            startForeground(NOTIFICATION_ID, notification);
+        }
         startSound(alarm);
         startVibration(alarm);
         return test ? START_NOT_STICKY : START_STICKY;

@@ -30,7 +30,6 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
-        Ui.hideStatusBar(this);
         buildUi();
         if (!getPreferences(MODE_PRIVATE).getBoolean("intro_shown",false)) {
             getPreferences(MODE_PRIVATE).edit().putBoolean("intro_shown",true).apply();
@@ -121,6 +120,7 @@ public class MainActivity extends Activity {
         root.addView(fab,fp);
         setContentView(root);
         Ui.applySystemBarInsets(root,0,0,0,0);
+        root.post(() -> Ui.hideStatusBar(this));
     }
 
     @Override protected void onResume() {
@@ -136,10 +136,15 @@ public class MainActivity extends Activity {
     private void recoverActiveAlarm() {
         long id = AlarmService.getActiveAlarmId(this);
         if (id < 0 || AlarmStore.get(this,id) == null) return;
-        Intent service = new Intent(this,AlarmService.class).setAction(AlarmService.ACTION_START).putExtra(AlarmScheduler.EXTRA_ALARM_ID,id);
-        if (Build.VERSION.SDK_INT >= 26) startForegroundService(service); else startService(service);
-        Intent ring = new Intent(this,RingActivity.class).putExtra(AlarmScheduler.EXTRA_ALARM_ID,id);
-        startActivity(ring);
+        try {
+            Intent service = new Intent(this,AlarmService.class).setAction(AlarmService.ACTION_START).putExtra(AlarmScheduler.EXTRA_ALARM_ID,id);
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(service); else startService(service);
+            Intent ring = new Intent(this,RingActivity.class).putExtra(AlarmScheduler.EXTRA_ALARM_ID,id);
+            startActivity(ring);
+        } catch (RuntimeException e) {
+            // Never let a stale foreground-service state make the launcher activity crash.
+            getSharedPreferences(AlarmService.ACTIVE_PREF,MODE_PRIVATE).edit().remove("id").apply();
+        }
     }
 
     private void refresh() {

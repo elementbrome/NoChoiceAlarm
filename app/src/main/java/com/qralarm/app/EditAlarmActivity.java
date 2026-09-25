@@ -75,7 +75,6 @@ public class EditAlarmActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
-        Ui.hideStatusBar(this);
         long id = getIntent().getLongExtra(AlarmScheduler.EXTRA_ALARM_ID,-1);
         AlarmModel existing = id < 0 ? null : AlarmStore.get(this,id);
         isNew = existing == null;
@@ -284,6 +283,7 @@ public class EditAlarmActivity extends Activity {
         refreshModeUi();
         setContentView(scroll);
         Ui.applySystemBarInsets(scroll,0,0,0,0);
+        scroll.post(() -> Ui.hideStatusBar(this));
     }
 
     private void buildMathSection(LinearLayout parent) {
