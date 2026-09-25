@@ -1,3 +1,12 @@
+
+## Nouveautés v1.3
+- Éditeur d’alarme en bottom sheet : ouverture à mi-écran, glisser vers le haut pour éditer, vers le bas pour fermer sans enregistrer.
+- Bouton Enregistrer fixe en bas ; tous les autres réglages défilent.
+- Sélecteur d’heure minimal avec pointeur violet, sans cadran de fond ni pastille autour de la valeur.
+- Style typographique géométrique inspiré de Zen Dots pour les heures et les titres.
+- Bouton Buy me a coffee informatif sur l’accueil.
+- Voir `ICON_GUIDE_FR.md` pour remplacer facilement l’icône.
+
 # NoChoice Alarm — v1.2
 
 Application Android de réveil hors ligne conçue pour rendre l'arrêt d'une alarme volontairement exigeant.

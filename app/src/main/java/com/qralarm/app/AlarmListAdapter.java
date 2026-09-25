@@ -62,7 +62,7 @@ public class AlarmListAdapter extends BaseAdapter {
             identity.addView(active,new LinearLayout.LayoutParams(-2,-2));
         }
 
-        TextView time = Ui.text(context, a.timeText(), 34, a.enabled ? Ui.TEXT : 0xFF777C89, true);
+        TextView time = Ui.displayText(context, a.timeText(), 34, a.enabled ? Ui.TEXT : 0xFF777C89);
         LinearLayout.LayoutParams timeP = new LinearLayout.LayoutParams(-2,-2);
         timeP.topMargin = a.enabled ? Ui.dp(context,2) : 0;
         identity.addView(time,timeP);

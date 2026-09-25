@@ -50,10 +50,23 @@ public class MainActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(0,Ui.dp(this,24),0,Ui.dp(this,96));
 
-        TextView title = Ui.text(this,"Alarmes",34,Ui.TEXT,true);
-        LinearLayout.LayoutParams titleP = new LinearLayout.LayoutParams(-1,-2);
-        titleP.leftMargin=Ui.dp(this,22); titleP.rightMargin=Ui.dp(this,22);
-        content.addView(title,titleP);
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView title = Ui.displayText(this,"Alarmes",34,Ui.TEXT);
+        header.addView(title,new LinearLayout.LayoutParams(0,-2,1f));
+
+        TextView coffee = Ui.text(this,"☕  Buy me a coffee",12,Ui.TEXT,true);
+        coffee.setGravity(Gravity.CENTER);
+        coffee.setPadding(Ui.dp(this,12),0,Ui.dp(this,12),0);
+        coffee.setBackground(Ui.outlined(Color.TRANSPARENT,Ui.STROKE,16,this));
+        coffee.setOnClickListener(v -> showCoffeeInfo());
+        header.addView(coffee,new LinearLayout.LayoutParams(-2,Ui.dp(this,38)));
+
+        LinearLayout.LayoutParams headerP = new LinearLayout.LayoutParams(-1,-2);
+        headerP.leftMargin=Ui.dp(this,22); headerP.rightMargin=Ui.dp(this,22);
+        content.addView(header,headerP);
 
         TextView subtitle = Ui.text(this,"Cliquez sur une alarme pour la modifier.",14,Ui.MUTED,false);
         LinearLayout.LayoutParams subP = new LinearLayout.LayoutParams(-1,-2);
@@ -161,6 +174,15 @@ public class MainActivity extends Activity {
         Intent i = new Intent(this,EditAlarmActivity.class);
         if (id >= 0) i.putExtra(AlarmScheduler.EXTRA_ALARM_ID,id);
         startActivity(i);
+    }
+
+
+    private void showCoffeeInfo() {
+        new AlertDialog.Builder(this)
+                .setTitle("Buy me a coffee")
+                .setMessage("NoChoice Alarm est un projet gratuit. Si l’application vous aide, vous pourrez bientôt soutenir son développement avec un don. Le lien Buy Me a Coffee sera ajouté ici dans une prochaine version.")
+                .setPositiveButton("Compris",null)
+                .show();
     }
 
     private void confirmDelete(AlarmModel a) {

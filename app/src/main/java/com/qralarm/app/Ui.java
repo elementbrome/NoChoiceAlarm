@@ -61,6 +61,32 @@ public final class Ui {
         return t;
     }
 
+
+    /** Geometric display style inspired by Zen Dots, using only Android system fonts. */
+    public static TextView displayText(Context c, String value, float sp, int color) {
+        TextView t = new TextView(c);
+        t.setText(value);
+        t.setTextSize(sp);
+        t.setTextColor(color);
+        t.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        if (Build.VERSION.SDK_INT >= 21) t.setLetterSpacing(0.055f);
+        return t;
+    }
+
+    /** Makes the editor respect the status bar/camera cutout instead of drawing behind it. */
+    public static void showStatusBar(Activity activity) {
+        try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                WindowInsetsController controller = activity.getWindow().getInsetsController();
+                if (controller != null) controller.show(WindowInsets.Type.statusBars());
+            } else {
+                activity.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            }
+        } catch (Throwable e) {
+            Log.w("NoChoiceAlarm", "Unable to show status bar", e);
+        }
+    }
+
     public static TextView chip(Context c, String value) {
         TextView t = text(c, value, 12, TEXT, true);
         t.setGravity(android.view.Gravity.CENTER);
@@ -83,7 +109,7 @@ public final class Ui {
                 try {
                     int l, t, r, b;
                     if (Build.VERSION.SDK_INT >= 30) {
-                        android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                        android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
                         l = bars.left; t = bars.top; r = bars.right; b = bars.bottom;
                     } else {
                         l = insets.getSystemWindowInsetLeft();

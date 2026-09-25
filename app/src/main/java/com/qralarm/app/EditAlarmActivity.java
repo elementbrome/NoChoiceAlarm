@@ -19,9 +19,11 @@ import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -29,10 +31,10 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 public class EditAlarmActivity extends Activity {
     private static final int REQ_AUDIO = 701;
@@ -42,7 +44,9 @@ public class EditAlarmActivity extends Activity {
     private boolean qrSavedThisSession;
     private boolean qrSaveRequired;
 
-    private TimePicker timePicker;
+    private MinimalClockView timePicker;
+    private TextView hourDisplay;
+    private TextView minuteDisplay;
     private EditText label;
     private final TextView[] dayViews = new TextView[7];
 
@@ -56,8 +60,8 @@ public class EditAlarmActivity extends Activity {
     private Spinner rampSpinner;
     private Switch vibrationSwitch;
 
-    private TextView qrModeButton;
-    private TextView mathModeButton;
+    private LinearLayout qrModeButton;
+    private LinearLayout mathModeButton;
     private LinearLayout qrSection;
     private LinearLayout mathSection;
     private TextView qrGlobalButton;
@@ -69,12 +73,22 @@ public class EditAlarmActivity extends Activity {
     private Bitmap qrBitmap;
     private String shownQrToken = "";
 
+    private SwipeSheetLayout sheet;
+    private View editLockOverlay;
+
     private MediaPlayer previewPlayer;
     private final Handler previewHandler = new Handler(Looper.getMainLooper());
     private final Runnable stopPreviewRunnable = this::stopVolumePreview;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Ui.showStatusBar(this);
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+            getWindow().setAttributes(lp);
+        }
+
         long id = getIntent().getLongExtra(AlarmScheduler.EXTRA_ALARM_ID,-1);
         AlarmModel existing = id < 0 ? null : AlarmStore.get(this,id);
         isNew = existing == null;
@@ -102,34 +116,49 @@ public class EditAlarmActivity extends Activity {
     }
 
     private void buildUi() {
+        FrameLayout screen = new FrameLayout(this);
+        screen.setBackgroundColor(Color.TRANSPARENT);
+
+        View scrim = new View(this);
+        scrim.setBackgroundColor(0x99000000);
+        screen.addView(scrim,new FrameLayout.LayoutParams(-1,-1));
+
+        sheet = new SwipeSheetLayout(this);
+        sheet.setOrientation(LinearLayout.VERTICAL);
+        sheet.setBackground(Ui.rounded(Ui.BG,26,this));
+        sheet.setElevation(Ui.dp(this,18));
+        sheet.setPadding(0,Ui.dp(this,8),0,0);
+
+        FrameLayout.LayoutParams sheetParams = new FrameLayout.LayoutParams(-1,-1,Gravity.BOTTOM);
+        sheetParams.topMargin = Ui.dp(this,14);
+        screen.addView(sheet,sheetParams);
+
+        LinearLayout handleBox = new LinearLayout(this);
+        handleBox.setGravity(Gravity.CENTER);
+        View handle = new View(this);
+        handle.setBackground(Ui.rounded(0xFF666B78,3,this));
+        handleBox.addView(handle,new LinearLayout.LayoutParams(Ui.dp(this,44),Ui.dp(this,4)));
+        sheet.addView(handleBox,new LinearLayout.LayoutParams(-1,Ui.dp(this,28)));
+
+        FrameLayout contentFrame = new FrameLayout(this);
+        sheet.addView(contentFrame,new LinearLayout.LayoutParams(-1,0,1f));
+
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Ui.BG);
         scroll.setClipToPadding(false);
+        scroll.setBackgroundColor(Ui.BG);
+        contentFrame.addView(scroll,new FrameLayout.LayoutParams(-1,-1));
+        sheet.setScrollChild(scroll);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(Ui.dp(this,18),Ui.dp(this,18),Ui.dp(this,18),Ui.dp(this,40));
+        root.setPadding(Ui.dp(this,20),Ui.dp(this,4),Ui.dp(this,20),Ui.dp(this,32));
         scroll.addView(root,new ScrollView.LayoutParams(-1,-2));
 
-        LinearLayout top = new LinearLayout(this);
-        top.setGravity(Gravity.CENTER_VERTICAL);
-        TextView back = Ui.text(this,"‹",40,Ui.TEXT,false);
-        back.setGravity(Gravity.CENTER);
-        back.setOnClickListener(v->finish());
-        top.addView(back,new LinearLayout.LayoutParams(Ui.dp(this,48),Ui.dp(this,52)));
-        TextView title = Ui.text(this,isNew?"Nouvelle alarme":"Modifier l’alarme",25,Ui.TEXT,true);
-        top.addView(title,new LinearLayout.LayoutParams(0,-2,1f));
-        root.addView(top,new LinearLayout.LayoutParams(-1,-2));
+        TextView title = Ui.displayText(this,isNew?"Nouvelle alarme":"Modifier l’alarme",25,Ui.TEXT);
+        root.addView(title,new LinearLayout.LayoutParams(-1,-2));
 
-        timePicker = new TimePicker(this);
-        timePicker.setIs24HourView(android.text.format.DateFormat.is24HourFormat(this));
-        timePicker.setHour(alarm.hour);
-        timePicker.setMinute(alarm.minute);
-        LinearLayout timeCard = card();
-        timeCard.setGravity(Gravity.CENTER);
-        timeCard.addView(timePicker,new LinearLayout.LayoutParams(-1,-2));
-        addCard(root,timeCard,14);
+        buildTimePicker(root);
 
         section(root,"Nom de l’alarme");
         label = new EditText(this);
@@ -216,17 +245,11 @@ public class EditAlarmActivity extends Activity {
         vibrationCard.setGravity(Gravity.CENTER_VERTICAL);
         vibrationCard.setPadding(Ui.dp(this,16),Ui.dp(this,10),Ui.dp(this,10),Ui.dp(this,10));
         vibrationCard.setBackground(Ui.rounded(Ui.SURFACE,16,this));
-        LinearLayout vibrationText = new LinearLayout(this);
-        vibrationText.setOrientation(LinearLayout.VERTICAL);
-        vibrationText.addView(Ui.text(this,"Vibrer pendant l’alarme",16,Ui.TEXT,true));
-        TextView vibHint=Ui.text(this,"Désactivé par défaut",12,Ui.MUTED,false);
-        LinearLayout.LayoutParams vh=new LinearLayout.LayoutParams(-2,-2); vh.topMargin=Ui.dp(this,2);
-        vibrationText.addView(vibHint,vh);
-        vibrationCard.addView(vibrationText,new LinearLayout.LayoutParams(0,-2,1f));
+        vibrationCard.addView(Ui.text(this,"Vibrer pendant l’alarme",16,Ui.TEXT,true),new LinearLayout.LayoutParams(0,-2,1f));
         vibrationSwitch = new Switch(this);
         vibrationSwitch.setChecked(alarm.vibrationEnabled);
         vibrationCard.addView(vibrationSwitch,new LinearLayout.LayoutParams(-2,-2));
-        root.addView(vibrationCard,new LinearLayout.LayoutParams(-1,Ui.dp(this,68)));
+        root.addView(vibrationCard,new LinearLayout.LayoutParams(-1,Ui.dp(this,62)));
 
         section(root,"Mode de réveil");
         TextView modeHelp = Ui.text(this,"Activez QR Code, Math, ou les deux. Si les deux sont actifs, le QR est demandé en premier.",13,Ui.MUTED,false);
@@ -264,26 +287,89 @@ public class EditAlarmActivity extends Activity {
         testP.topMargin=Ui.dp(this,32);
         root.addView(test,testP);
 
-        Button save = button("Enregistrer",Color.WHITE,Ui.PRIMARY);
-        save.setTextSize(17);
-        save.setOnClickListener(v->saveAlarm());
-        LinearLayout.LayoutParams saveP=new LinearLayout.LayoutParams(-1,Ui.dp(this,60));
-        saveP.topMargin=Ui.dp(this,10);
-        root.addView(save,saveP);
-
-        TextView testHint=Ui.text(this,"En mode test, un bouton « Arrêter le test » reste disponible même sans QR imprimé.",13,Ui.MUTED,false);
-        LinearLayout.LayoutParams thp=new LinearLayout.LayoutParams(-1,-2); thp.topMargin=Ui.dp(this,10);
-        root.addView(testHint,thp);
-
         TextView security=Ui.text(this,"Sécurité : les QR contiennent uniquement un jeton aléatoire local. Les alarmes et réglages restent sur l’appareil.",13,Ui.MUTED,false);
         security.setLineSpacing(0,1.2f);
         LinearLayout.LayoutParams secp=new LinearLayout.LayoutParams(-1,-2); secp.topMargin=Ui.dp(this,24);
         root.addView(security,secp);
 
+        editLockOverlay = buildEditLockOverlay();
+        contentFrame.addView(editLockOverlay,new FrameLayout.LayoutParams(-1,-1));
+
+        LinearLayout saveBar = new LinearLayout(this);
+        saveBar.setPadding(Ui.dp(this,20),Ui.dp(this,10),Ui.dp(this,20),Ui.dp(this,14));
+        saveBar.setBackgroundColor(Ui.BG);
+        Button save = button("Enregistrer",Color.WHITE,Ui.PRIMARY);
+        save.setTextSize(17);
+        save.setOnClickListener(v->saveAlarm());
+        saveBar.addView(save,new LinearLayout.LayoutParams(-1,Ui.dp(this,60)));
+        sheet.addView(saveBar,new LinearLayout.LayoutParams(-1,Ui.dp(this,84)));
+
+        sheet.setCallback(new SwipeSheetLayout.Callback() {
+            @Override public void onExpandedChanged(boolean expanded) {
+                editLockOverlay.setVisibility(expanded ? View.GONE : View.VISIBLE);
+            }
+            @Override public void onDismissed() {
+                closeWithoutSaving();
+            }
+        });
+
+        scrim.setOnClickListener(v -> sheet.dismissSheet());
         refreshModeUi();
-        setContentView(scroll);
-        Ui.applySystemBarInsets(scroll,0,0,0,0);
-        scroll.post(() -> Ui.hideStatusBar(this));
+        setContentView(screen);
+        Ui.applySystemBarInsets(screen,0,0,0,0);
+        screen.post(() -> sheet.setPeekHeightPx(Math.max(1,screen.getHeight()/2)));
+    }
+
+    private void buildTimePicker(LinearLayout root) {
+        LinearLayout display = new LinearLayout(this);
+        display.setGravity(Gravity.CENTER);
+        display.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams displayP = new LinearLayout.LayoutParams(-1,-2);
+        displayP.topMargin=Ui.dp(this,12);
+        root.addView(display,displayP);
+
+        hourDisplay = Ui.displayText(this,two(alarm.hour),50,Ui.TEXT);
+        hourDisplay.setGravity(Gravity.CENTER);
+        minuteDisplay = Ui.displayText(this,two(alarm.minute),50,Ui.TEXT);
+        minuteDisplay.setGravity(Gravity.CENTER);
+        TextView colon = Ui.displayText(this,":",48,Ui.MUTED);
+        colon.setGravity(Gravity.CENTER);
+
+        display.addView(hourDisplay,new LinearLayout.LayoutParams(Ui.dp(this,94),Ui.dp(this,76)));
+        display.addView(colon,new LinearLayout.LayoutParams(Ui.dp(this,28),Ui.dp(this,76)));
+        display.addView(minuteDisplay,new LinearLayout.LayoutParams(Ui.dp(this,94),Ui.dp(this,76)));
+
+        timePicker = new MinimalClockView(this);
+        timePicker.setTime(alarm.hour,alarm.minute);
+        timePicker.setListener((hour,minute,mode)-> {
+            hourDisplay.setText(two(hour));
+            minuteDisplay.setText(two(minute));
+            hourDisplay.setTextColor(Ui.TEXT);
+            minuteDisplay.setTextColor(Ui.TEXT);
+        });
+        hourDisplay.setOnClickListener(v->timePicker.setMode(MinimalClockView.MODE_HOUR));
+        minuteDisplay.setOnClickListener(v->timePicker.setMode(MinimalClockView.MODE_MINUTE));
+        timePicker.setMode(MinimalClockView.MODE_HOUR);
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1,Ui.dp(this,300));
+        cp.topMargin=Ui.dp(this,2);
+        root.addView(timePicker,cp);
+    }
+
+    private View buildEditLockOverlay() {
+        FrameLayout overlay = new FrameLayout(this);
+        overlay.setBackgroundColor(0x12000000);
+        overlay.setClickable(true);
+        overlay.setFocusable(true);
+
+        TextView hint = Ui.text(this,"↑  Glissez vers le haut pour modifier",13,Ui.TEXT,true);
+        hint.setGravity(Gravity.CENTER);
+        hint.setPadding(Ui.dp(this,16),Ui.dp(this,9),Ui.dp(this,16),Ui.dp(this,9));
+        hint.setBackground(Ui.rounded(0xEE242833,18,this));
+        FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(-2,Ui.dp(this,40),Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+        hp.bottomMargin=Ui.dp(this,18);
+        overlay.addView(hint,hp);
+        overlay.setOnClickListener(v -> Toast.makeText(this,"Glissez la fenêtre vers le haut pour modifier l’alarme.",Toast.LENGTH_SHORT).show());
+        return overlay;
     }
 
     private void buildMathSection(LinearLayout parent) {
@@ -355,7 +441,7 @@ public class EditAlarmActivity extends Activity {
     }
 
     private void section(LinearLayout root,String s) {
-        TextView t=Ui.text(this,s,14,Ui.MUTED,true);
+        TextView t=Ui.displayText(this,s,13,Ui.MUTED);
         LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);
         p.topMargin=Ui.dp(this,22); p.bottomMargin=Ui.dp(this,8);
         root.addView(t,p);
@@ -387,11 +473,27 @@ public class EditAlarmActivity extends Activity {
         return v;
     }
 
-    private TextView selectableWithIcon(String text,int icon,Runnable click) {
-        TextView v=selectable(text,click);
-        v.setCompoundDrawablesWithIntrinsicBounds(icon,0,0,0);
-        v.setCompoundDrawablePadding(Ui.dp(this,8));
-        return v;
+    private LinearLayout selectableWithIcon(String text,int icon,Runnable click) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.HORIZONTAL);
+        box.setGravity(Gravity.CENTER);
+        box.setBackground(Ui.rounded(Ui.SURFACE,15,this));
+        box.setClickable(true);
+        box.setFocusable(true);
+
+        ImageView image = new ImageView(this);
+        image.setImageResource(icon);
+        image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        box.addView(image,new LinearLayout.LayoutParams(Ui.dp(this,20),Ui.dp(this,20)));
+
+        TextView label = Ui.text(this,text,14,Ui.TEXT,true);
+        label.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2,Ui.dp(this,24));
+        lp.leftMargin=Ui.dp(this,8);
+        box.addView(label,lp);
+        box.setTag(label);
+        box.setOnClickListener(v->click.run());
+        return box;
     }
 
     private Spinner spinner(String[] values) {
@@ -445,13 +547,21 @@ public class EditAlarmActivity extends Activity {
     }
 
     private void refreshModeUi() {
-        styleSelectable(qrModeButton,alarm.usesQr());
-        styleSelectable(mathModeButton,alarm.usesMath());
+        styleModeButton(qrModeButton,alarm.usesQr());
+        styleModeButton(mathModeButton,alarm.usesMath());
         qrSection.setVisibility(alarm.usesQr()?View.VISIBLE:View.GONE);
         mathSection.setVisibility(alarm.usesMath()?View.VISIBLE:View.GONE);
         updateDifficultyStyles();
         updateQrScopeStyles();
         if(alarm.usesQr()) refreshQr();
+    }
+
+    private void styleModeButton(LinearLayout v,boolean selected) {
+        if (v == null) return;
+        v.setBackground(selected?Ui.rounded(Ui.PRIMARY,15,this):Ui.rounded(Ui.SURFACE,15,this));
+        Object tag=v.getTag();
+        if(tag instanceof TextView) ((TextView)tag).setTextColor(selected?Color.WHITE:Ui.TEXT);
+        for(int i=0;i<v.getChildCount();i++) if(v.getChildAt(i) instanceof ImageView) v.getChildAt(i).setAlpha(selected?1f:.76f);
     }
 
     private void styleSelectable(TextView v,boolean selected) {
@@ -646,15 +756,31 @@ public class EditAlarmActivity extends Activity {
         AlarmStatusNotifier.update(this);
         Toast.makeText(this,"Alarme enregistrée pour "+alarm.timeText(),Toast.LENGTH_SHORT).show();
         finish();
+        overridePendingTransition(0,0);
+    }
+
+    private void closeWithoutSaving() {
+        stopVolumePreview();
+        finish();
+        overridePendingTransition(0,0);
+    }
+
+    private String two(int value) {
+        return String.format(Locale.getDefault(),"%02d",value);
+    }
+
+    @Override public void onBackPressed() {
+        if (sheet != null) sheet.dismissSheet();
+        else closeWithoutSaving();
     }
 
     @Override protected void onPause() {
         stopVolumePreview();
         super.onPause();
     }
+
     @Override public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) Ui.hideStatusBar(this);
+        if (hasFocus) Ui.showStatusBar(this);
     }
-
 }

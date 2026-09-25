@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0
+- Éditeur d’alarme transformé en panneau coulissant depuis le bas, ouvert à mi-écran.
+- Glisser vers le haut pour déverrouiller l’édition, glisser vers le bas pour fermer sans sauvegarder.
+- Bouton Enregistrer fixe en bas ; le reste de l’éditeur défile.
+- Nouveau sélecteur d’heure minimaliste sans cadran de fond ni pastille de sélection.
+- Alignement propre des icônes QR Code et Math.
+- Suppression des descriptions Vibration et Mode test.
+- Typographie display géométrique inspirée de Zen Dots pour les heures et titres.
+- Bouton Buy me a coffee discret sur l’accueil (information uniquement, pas encore de lien).
+- Guide pour remplacer l’icône de l’application.
+
 ## 1.2.1 — 2026-09-25
 
 - Correctif de crash au lancement sur certains appareils / états de mise à jour.

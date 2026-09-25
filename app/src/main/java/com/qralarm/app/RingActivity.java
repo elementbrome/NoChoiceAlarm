@@ -70,13 +70,13 @@ public class RingActivity extends Activity {
         kicker.setLetterSpacing(.14f);
         root.addView(kicker);
 
-        TextView time = Ui.text(this,alarm.timeText(),62,Ui.TEXT,true);
+        TextView time = Ui.displayText(this,alarm.timeText(),62,Ui.TEXT);
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-2,-2);
         tp.topMargin=Ui.dp(this,10);
         root.addView(time,tp);
 
         String lbl = alarm.label == null || alarm.label.trim().isEmpty() ? "Il est l’heure" : alarm.label.trim();
-        TextView label = Ui.text(this,lbl,22,Ui.TEXT,true);
+        TextView label = Ui.displayText(this,lbl,22,Ui.TEXT);
         label.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2);
         lp.topMargin=Ui.dp(this,6);
@@ -120,7 +120,7 @@ public class RingActivity extends Activity {
         LinearLayout.LayoutParams dp=new LinearLayout.LayoutParams(-2,-2); dp.topMargin=Ui.dp(this,28);
         root.addView(difficulty,dp);
 
-        TextView expression=Ui.text(this,mathExpression,32,Ui.TEXT,true);
+        TextView expression=Ui.displayText(this,mathExpression,32,Ui.TEXT);
         expression.setGravity(Gravity.CENTER);
         expression.setPadding(Ui.dp(this,16),Ui.dp(this,18),Ui.dp(this,16),Ui.dp(this,18));
         expression.setBackground(Ui.rounded(Ui.SURFACE,18,this));

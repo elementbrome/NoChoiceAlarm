@@ -31,7 +31,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".EditAlarmActivity" android:exported="false" />
+        <activity android:name=".EditAlarmActivity" android:exported="false" android:theme="@style/Theme.QRAlarm.EditorSheet" />
         <activity android:name=".QrScannerActivity" android:exported="false" />
         <activity
             android:name=".RingActivity"
