@@ -1,0 +1,16 @@
+NoChoice Alarm est un réveil conçu pour que tu ne puisses pas te rendormir : pour arrêter la sonnerie, tu dois scanner un QR code et/ou résoudre un problème de mathématiques.
+
+Fonctionnalités :
+- Arrêt par QR code, par problème de maths, ou les deux
+- QR code commun à toutes les alarmes ou QR individuel par alarme
+- Enregistrement du QR dans la galerie ou impression sur une page A4
+- Fonctionne au-dessus de l'écran verrouillé, sans jamais déverrouiller ton téléphone
+- Flash intégré au scanner pour scanner dans l'obscurité
+- Volume progressif, vibration optionnelle, rappel (snooze) et mode test
+- Duplication d'alarmes en un geste
+- Interface en français et en anglais
+
+Respect de la vie privée :
+- Aucune permission Internet : l'application n'envoie aucune donnée
+- Aucune publicité, aucun traceur
+- Toutes les données restent sur ton téléphone

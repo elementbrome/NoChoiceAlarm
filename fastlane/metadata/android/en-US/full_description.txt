@@ -1,0 +1,16 @@
+NoChoice Alarm is an alarm clock designed so you can't go back to sleep: to stop the ringing, you must scan a QR code and/or solve a math problem.
+
+Features:
+- Stop the alarm with a QR code, a math problem, or both
+- One shared QR code for all alarms, or an individual QR code per alarm
+- Save the QR code to your gallery or print it on an A4 page
+- Works on top of the lock screen without ever unlocking your phone
+- Built-in flash button in the scanner for scanning in the dark
+- Gradual volume, optional vibration, snooze and test mode
+- Duplicate alarms in one tap
+- Interface in English and French
+
+Privacy:
+- No Internet permission: the app never sends any data
+- No ads, no trackers
+- All data stays on your phone
