@@ -2,6 +2,7 @@ package com.qralarm.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -17,6 +18,7 @@ import android.os.Looper;
 import android.provider.OpenableColumns;
 import android.text.InputType;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -74,7 +76,8 @@ public class EditAlarmActivity extends Activity {
     private String shownQrToken = "";
 
     private SwipeSheetLayout sheet;
-    private View editLockOverlay;
+    private Button saveButton;
+    private AlertDialog timeDialog;
 
     private MediaPlayer previewPlayer;
     private final Handler previewHandler = new Handler(Looper.getMainLooper());
@@ -294,9 +297,6 @@ public class EditAlarmActivity extends Activity {
         LinearLayout.LayoutParams secp=new LinearLayout.LayoutParams(-1,-2); secp.topMargin=Ui.dp(this,24);
         root.addView(security,secp);
 
-        editLockOverlay = buildEditLockOverlay();
-        contentFrame.addView(editLockOverlay,new FrameLayout.LayoutParams(-1,-1));
-
         LinearLayout saveBar = new LinearLayout(this);
         saveBar.setPadding(Ui.dp(this,20),Ui.dp(this,10),Ui.dp(this,20),Ui.dp(this,14));
         saveBar.setBackgroundColor(Ui.BG);
@@ -304,12 +304,13 @@ public class EditAlarmActivity extends Activity {
         save.setBackground(Ui.gradient(16,this));
         save.setTextSize(17);
         save.setOnClickListener(v->saveAlarm());
+        saveButton = save;
         saveBar.addView(save,new LinearLayout.LayoutParams(-1,Ui.dp(this,60)));
         sheet.addView(saveBar,new LinearLayout.LayoutParams(-1,Ui.dp(this,84)));
 
         sheet.setCallback(new SwipeSheetLayout.Callback() {
             @Override public void onExpandedChanged(boolean expanded) {
-                editLockOverlay.setVisibility(expanded ? View.GONE : View.VISIBLE);
+                // Editing is allowed whether the sheet is expanded or not.
             }
             @Override public void onDismissed() {
                 closeWithoutSaving();
@@ -391,20 +392,36 @@ public class EditAlarmActivity extends Activity {
         LinearLayout.LayoutParams pickerParams = new LinearLayout.LayoutParams(-1,Ui.dp(this,302));
         content.addView(picker,pickerParams);
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(content)
-                .setNegativeButton(R.string.cancel,null)
-                .setPositiveButton(R.string.ok,(d,which)-> {
-                    selectedHour=picker.getHour();
-                    selectedMinute=picker.getMinute();
-                    hourDisplay.setText(two(selectedHour));
-                    minuteDisplay.setText(two(selectedMinute));
-                })
-                .create();
+        final Runnable applyPickedTime = () -> {
+            selectedHour=picker.getHour();
+            selectedMinute=picker.getMinute();
+            hourDisplay.setText(two(selectedHour));
+            minuteDisplay.setText(two(selectedMinute));
+        };
+
+        // If the user taps outside the dialog without pressing OK, the chosen time is kept.
+        // If that tap lands on the "Save" button, the alarm is saved right away.
+        final AlertDialog dialog = new AlertDialog(this) {
+            @Override public boolean dispatchTouchEvent(MotionEvent ev) {
+                if (ev.getActionMasked()==MotionEvent.ACTION_DOWN && isOutside(getWindow()!=null?getWindow().getDecorView():null,ev)) {
+                    applyPickedTime.run();
+                    boolean onSave=isOver(saveButton,ev);
+                    dismiss();
+                    if (onSave) saveAlarm();
+                    return true;
+                }
+                return super.dispatchTouchEvent(ev);
+            }
+        };
+        dialog.setView(content);
+        dialog.setButton(DialogInterface.BUTTON_NEGATIVE,getString(R.string.cancel),(d,which)->{});
+        dialog.setButton(DialogInterface.BUTTON_POSITIVE,getString(R.string.ok),(d,which)->applyPickedTime.run());
         dialog.setOnShowListener(d -> {
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Ui.ACCENT_START);
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Ui.ACCENT_START);
         });
+        dialog.setOnDismissListener(d -> { if (timeDialog==dialog) timeDialog=null; });
+        timeDialog = dialog;
         dialog.show();
         if (dialog.getWindow()!=null) {
             dialog.getWindow().setBackgroundDrawable(Ui.rounded(Ui.SURFACE,24,this));
@@ -414,29 +431,28 @@ public class EditAlarmActivity extends Activity {
         }
     }
 
+    private static boolean isOutside(View decor,MotionEvent ev) {
+        if (decor==null) return false;
+        int[] loc=new int[2];
+        decor.getLocationOnScreen(loc);
+        float x=ev.getRawX(), y=ev.getRawY();
+        return x<loc[0] || y<loc[1] || x>loc[0]+decor.getWidth() || y>loc[1]+decor.getHeight();
+    }
+
+    private static boolean isOver(View target,MotionEvent ev) {
+        if (target==null || !target.isShown()) return false;
+        int[] loc=new int[2];
+        target.getLocationOnScreen(loc);
+        float x=ev.getRawX(), y=ev.getRawY();
+        return x>=loc[0] && y>=loc[1] && x<=loc[0]+target.getWidth() && y<=loc[1]+target.getHeight();
+    }
+
     private void updateDialogTimeStyle(TextView hour,TextView minute,int mode) {
         boolean hourActive=mode==MinimalClockView.MODE_HOUR;
         hour.setBackground(hourActive?Ui.gradient(16,this):Ui.rounded(Ui.SURFACE_2,16,this));
         minute.setBackground(!hourActive?Ui.gradient(16,this):Ui.rounded(Ui.SURFACE_2,16,this));
         hour.setTextColor(hourActive?Color.WHITE:Ui.TEXT);
         minute.setTextColor(!hourActive?Color.WHITE:Ui.TEXT);
-    }
-
-    private View buildEditLockOverlay() {
-        FrameLayout overlay = new FrameLayout(this);
-        overlay.setBackgroundColor(0x12000000);
-        overlay.setClickable(true);
-        overlay.setFocusable(true);
-
-        TextView hint = Ui.text(this,getString(R.string.swipe_up_edit),13,Ui.TEXT,true);
-        hint.setGravity(Gravity.CENTER);
-        hint.setPadding(Ui.dp(this,16),Ui.dp(this,9),Ui.dp(this,16),Ui.dp(this,9));
-        hint.setBackground(Ui.rounded(0xEE242833,18,this));
-        FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(-2,Ui.dp(this,40),Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
-        hp.bottomMargin=Ui.dp(this,18);
-        overlay.addView(hint,hp);
-        overlay.setOnClickListener(v -> Toast.makeText(this,R.string.swipe_up_edit_toast,Toast.LENGTH_SHORT).show());
-        return overlay;
     }
 
     private void buildMathSection(LinearLayout parent) {
@@ -839,11 +855,16 @@ public class EditAlarmActivity extends Activity {
 
     private void saveAlarm() {
         stopVolumePreview();
+        if (timeDialog!=null) {
+            AlertDialog open=timeDialog;
+            timeDialog=null;
+            try { open.dismiss(); } catch(Exception ignored) {}
+        }
         collectForm(true);
         AlarmStore.save(this,alarm);
         AlarmScheduler.schedule(this,alarm);
         AlarmStatusNotifier.update(this);
-        Toast.makeText(this,getString(R.string.alarm_saved_for,alarm.timeText()),Toast.LENGTH_SHORT).show();
+        Toast.makeText(this,AlarmScheduler.timeUntilText(this,alarm),Toast.LENGTH_LONG).show();
         finish();
         overridePendingTransition(0,0);
     }

@@ -64,6 +64,34 @@ public final class AlarmScheduler {
         for (AlarmModel a : list) if (a.enabled) schedule(c,a);
     }
 
+    /** Text such as "Next alarm in 4 hours and 52 minutes", like the Android Clock app. */
+    public static String timeUntilText(Context c, AlarmModel a) {
+        long now = System.currentTimeMillis();
+        long diff = Math.max(0L, nextTrigger(a, now) - now);
+        long totalMinutes = (diff + 59_999L) / 60_000L; // round up to the next minute
+        if (totalMinutes < 1) return c.getString(R.string.next_alarm_in_less_than_minute);
+        int days = (int)(totalMinutes / (24 * 60));
+        int hours = (int)((totalMinutes / 60) % 24);
+        int minutes = (int)(totalMinutes % 60);
+        android.content.res.Resources r = c.getResources();
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        if (days > 0) parts.add(r.getQuantityString(R.plurals.duration_days, days, days));
+        if (hours > 0) parts.add(r.getQuantityString(R.plurals.duration_hours, hours, hours));
+        if (minutes > 0) parts.add(r.getQuantityString(R.plurals.duration_minutes, minutes, minutes));
+        String joined;
+        if (parts.size() == 1) {
+            joined = parts.get(0);
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < parts.size() - 1; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(parts.get(i));
+            }
+            joined = c.getString(R.string.duration_and, sb.toString(), parts.get(parts.size() - 1));
+        }
+        return c.getString(R.string.next_alarm_in, joined);
+    }
+
     public static long nextTrigger(AlarmModel a, long after) {
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(after);

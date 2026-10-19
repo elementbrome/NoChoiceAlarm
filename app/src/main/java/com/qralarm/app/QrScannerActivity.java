@@ -98,14 +98,15 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         p.topMargin = Ui.dp(this,48);
         root.addView(overlay,p);
 
-        flashButton = Ui.text(this,getString(R.string.flash),15,Color.WHITE,true);
+        flashButton = Ui.text(this,getString(R.string.flash),20,Color.WHITE,true);
         flashButton.setGravity(Gravity.CENTER);
-        flashButton.setPadding(Ui.dp(this,18),0,Ui.dp(this,18),0);
-        flashButton.setBackground(Ui.rounded(0xDD161921,18,this));
+        flashButton.setPadding(Ui.dp(this,32),0,Ui.dp(this,32),0);
+        flashButton.setMinWidth(Ui.dp(this,220));
+        flashButton.setBackground(Ui.rounded(0xDD161921,24,this));
         flashButton.setVisibility(android.view.View.INVISIBLE);
         flashButton.setOnClickListener(v->toggleFlash());
-        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(-2,Ui.dp(this,46),Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
-        fp.bottomMargin=Ui.dp(this,96);
+        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(-2,Ui.dp(this,68),Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+        fp.bottomMargin=Ui.dp(this,104);
         root.addView(flashButton,fp);
 
         TextView hint = Ui.text(this,getString(R.string.scanner_auto_validation),14,Color.WHITE,false);
@@ -169,7 +170,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         if (flashButton==null) return;
         flashButton.setVisibility(flashSupported?android.view.View.VISIBLE:android.view.View.INVISIBLE);
         flashButton.setText(flashOn?R.string.flash_on:R.string.flash);
-        flashButton.setBackground(flashOn?Ui.gradient(18,this):Ui.rounded(0xDD161921,18,this));
+        flashButton.setBackground(flashOn?Ui.gradient(24,this):Ui.rounded(0xDD161921,24,this));
     }
 
     private void startPreview(SurfaceHolder holder) {

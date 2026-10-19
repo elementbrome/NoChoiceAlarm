@@ -96,8 +96,10 @@ public class MainActivity extends Activity {
             @Override public void onToggle(AlarmModel alarm, boolean enabled) {
                 alarm.enabled=enabled;
                 AlarmStore.save(MainActivity.this,alarm);
-                if (enabled) AlarmScheduler.schedule(MainActivity.this,alarm);
-                else {
+                if (enabled) {
+                    AlarmScheduler.schedule(MainActivity.this,alarm);
+                    Toast.makeText(MainActivity.this,AlarmScheduler.timeUntilText(MainActivity.this,alarm),Toast.LENGTH_LONG).show();
+                } else {
                     AlarmScheduler.cancelRegular(MainActivity.this,alarm.id);
                     AlarmScheduler.cancelSnooze(MainActivity.this,alarm.id);
                 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.5 (versionCode 13)
+
+- La fenêtre d’édition n’est plus verrouillée : on peut modifier l’heure et les réglages sans glisser la fenêtre vers le haut.
+- Sélecteur d’heure : si l’on touche en dehors de la fenêtre (par exemple sur **Enregistrer**) sans appuyer sur **OK**, l’heure choisie est conservée ; un toucher sur **Enregistrer** enregistre directement l’alarme. **Annuler** et le bouton retour n’appliquent toujours pas le changement.
+- À l’activation d’une alarme (interrupteur de la liste) ou à son enregistrement, un message temporaire indique le temps restant, par ex. « Prochaine alarme prévue dans 4 heures et 52 minutes ».
+- Bouton **Flash** du scanner QR plus grand.
+- Build : les métadonnées de dépendances chiffrées ne sont plus incluses dans l’APK (recommandation F-Droid) ; l’APK signé est joint automatiquement aux releases GitHub (Java 21, comme F-Droid).
+- Version : `1.5.5`, `versionCode 13`.
+
 ## 1.5.4 (versionCode 12)
 
 - Ajout d’un bouton **Flash** dans le scanner QR. Il active/désactive la torche de la caméra lorsque l’appareil la prend en charge.

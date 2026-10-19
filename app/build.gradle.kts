@@ -10,8 +10,14 @@ android {
         applicationId = "com.qralarm.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.5.4"
+        versionCode = 13
+        versionName = "1.5.5"
+    }
+
+    // No encrypted dependency metadata in the APK (recommended by F-Droid).
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 
     compileOptions {

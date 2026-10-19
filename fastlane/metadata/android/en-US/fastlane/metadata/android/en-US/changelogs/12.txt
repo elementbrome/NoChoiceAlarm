@@ -1,3 +1,0 @@
-- New Flash button in the QR scanner
-- The time picker now opens in a dedicated dialog (Cancel / OK)
-- Dragging on the dial no longer scrolls the edit page

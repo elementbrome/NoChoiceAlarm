@@ -4,9 +4,11 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+  release:
+    types: [ published ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -16,11 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up Java 17
+      - name: Set up Java 21 (same as the F-Droid build server)
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
@@ -83,3 +85,19 @@ jobs:
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Attach APK to the GitHub release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="${TAG#v}"
+          APK="NoChoiceAlarm-${VERSION}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$APK"
+          gh release upload "$TAG" "$APK" --clobber --repo "$GITHUB_REPOSITORY"
+          CERT_SHA256=$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$APK" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}')
+          echo "Signing certificate SHA-256: $CERT_SHA256"
+          echo "### Signing certificate SHA-256" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$CERT_SHA256\`" >> "$GITHUB_STEP_SUMMARY"
