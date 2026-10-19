@@ -1,0 +1,3 @@
+- Nouveau bouton Flash dans le scanner QR
+- Le sélecteur d'heure s'ouvre maintenant dans une fenêtre dédiée (Annuler / OK)
+- Le geste sur le cadran ne fait plus défiler la page d'édition

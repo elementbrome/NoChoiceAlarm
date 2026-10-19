@@ -1,0 +1,103 @@
+name: Build signed release APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java 21 (same as the F-Droid build server)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+
+      - name: Install Android API 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.13'
+          cache-provider: enhanced
+          cache-cleanup: on-success
+
+      - name: Check signing secrets
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NOCHOICE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.NOCHOICE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.NOCHOICE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.NOCHOICE_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_BASE64" || (echo "Missing NOCHOICE_KEYSTORE_BASE64" && exit 1)
+          test -n "$KEYSTORE_PASSWORD" || (echo "Missing NOCHOICE_KEYSTORE_PASSWORD" && exit 1)
+          test -n "$KEY_ALIAS" || (echo "Missing NOCHOICE_KEY_ALIAS" && exit 1)
+          test -n "$KEY_PASSWORD" || (echo "Missing NOCHOICE_KEY_PASSWORD" && exit 1)
+
+      - name: Restore release keystore
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NOCHOICE_KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/app/nochoicealarm-release.jks"
+          chmod 600 "$GITHUB_WORKSPACE/app/nochoicealarm-release.jks"
+
+      - name: Build signed release APK
+        env:
+          NOCHOICE_KEYSTORE_PATH: ${{ github.workspace }}/app/nochoicealarm-release.jks
+          NOCHOICE_KEYSTORE_PASSWORD: ${{ secrets.NOCHOICE_KEYSTORE_PASSWORD }}
+          NOCHOICE_KEY_ALIAS: ${{ secrets.NOCHOICE_KEY_ALIAS }}
+          NOCHOICE_KEY_PASSWORD: ${{ secrets.NOCHOICE_KEY_PASSWORD }}
+        run: gradle :app:assembleRelease --stacktrace
+
+      - name: Verify APK signature
+        shell: bash
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
+          sha256sum app/build/outputs/apk/release/app-release.apk
+
+      - name: Remove keystore from runner
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/app/nochoicealarm-release.jks"
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: NoChoiceAlarm-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Attach APK to the GitHub release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="${TAG#v}"
+          APK="NoChoiceAlarm-${VERSION}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$APK"
+          gh release upload "$TAG" "$APK" --clobber --repo "$GITHUB_REPOSITORY"
+          CERT_SHA256=$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$APK" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}')
+          echo "Signing certificate SHA-256: $CERT_SHA256"
+          echo "### Signing certificate SHA-256" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$CERT_SHA256\`" >> "$GITHUB_STEP_SUMMARY"

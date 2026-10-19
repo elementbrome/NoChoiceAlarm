@@ -1,0 +1,4 @@
+- Les alarmes se modifient directement, sans devoir glisser la fenêtre vers le haut
+- L'heure choisie sur le cadran est conservée même si vous touchez Enregistrer sans appuyer sur OK
+- À l'activation ou à l'enregistrement d'une alarme, un message indique dans combien de temps elle sonnera
+- Bouton Flash plus grand dans le scanner QR

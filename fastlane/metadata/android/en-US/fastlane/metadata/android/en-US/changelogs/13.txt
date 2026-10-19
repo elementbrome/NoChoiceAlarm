@@ -1,0 +1,4 @@
+- Alarms can be edited right away, without swiping the sheet up first
+- The time picked in the clock dialog is kept even if you tap Save without pressing OK
+- When an alarm is turned on or saved, a short message shows how long until it rings
+- Larger Flash button in the QR scanner
